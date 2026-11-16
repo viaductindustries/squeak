@@ -19,15 +19,15 @@ public struct ButtonRouter: Sendable {
         case trigger(ButtonMapping)
         /// Drop the event and finish the mapping's action.
         case release(ButtonMapping)
-        /// Drop the event; the user pressed this button while adding one.
-        case captured(button: Int)
+        /// Drop the event; the user pressed this while adding a button.
+        case captured(Trigger)
     }
 
     private enum Held: Sendable {
         case pass, rewrite(Int), swallow, action(ButtonMapping)
     }
 
-    public var mappings: [Int: ButtonMapping] = [:]
+    public var mappings: [Trigger: ButtonMapping] = [:]
     public var isPaused = false
     public var isCapturing = false
     private var held: [Int: Held] = [:]
@@ -37,18 +37,24 @@ public struct ButtonRouter: Sendable {
     }
 
     public mutating func update(_ settings: SqueekSettings) {
-        mappings = Dictionary(uniqueKeysWithValues: settings.buttons.map { ($0.button, $0) })
+        mappings = Dictionary(settings.buttons.map { ($0.trigger, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
-    /// Routes one event. `isOverBrowser` is only asked when it matters, on the
-    /// press of a button set to "Pass to other apps".
-    public mutating func route(button: Int, phase: Phase, isOverBrowser: () -> Bool = { false }) -> Result {
+    /// Routes one event. `modifiers` are the keys held at the time.
+    /// `isOverBrowser` is only asked when it matters, on the press of a button
+    /// set to "Pass to other apps".
+    public mutating func route(
+        button: Int,
+        modifiers: KeyModifiers = [],
+        phase: Phase,
+        isOverBrowser: () -> Bool = { false }
+    ) -> Result {
         // Left and right clicks are never touched.
         guard button >= 2 else { return .pass }
 
         switch phase {
         case .down:
-            let (state, result) = decide(button: button, isOverBrowser: isOverBrowser)
+            let (state, result) = decide(Trigger(button: button, modifiers: modifiers), isOverBrowser: isOverBrowser)
             held[button] = state
             return result
         case .dragged:
@@ -59,12 +65,16 @@ public struct ButtonRouter: Sendable {
         }
     }
 
-    private mutating func decide(button: Int, isOverBrowser: () -> Bool) -> (Held, Result) {
+    private mutating func decide(_ trigger: Trigger, isOverBrowser: () -> Bool) -> (Held, Result) {
         if isCapturing {
             isCapturing = false
-            return (.swallow, .captured(button: button))
+            return (.swallow, .captured(trigger))
         }
-        guard !isPaused, let mapping = mappings[button] else { return (.pass, .pass) }
+        // An exact match wins (⌘ + middle); otherwise the plain button's
+        // setting applies, so holding a key doesn't bring back behaviour the
+        // user turned off.
+        let plain = Trigger(button: trigger.button)
+        guard !isPaused, let mapping = mappings[trigger] ?? mappings[plain] else { return (.pass, .pass) }
 
         switch mapping.action {
         case .normal:

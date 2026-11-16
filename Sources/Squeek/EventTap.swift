@@ -12,7 +12,7 @@ final class EventTap: @unchecked Sendable {
     /// Called with the mapping and whether the button went down or up.
     var onAction: @MainActor (ButtonMapping, ButtonRouter.Phase) -> Void = { _, _ in }
     /// Called when a button is pressed while adding a button.
-    var onCapture: @MainActor (Int) -> Void = { _ in }
+    var onCapture: @MainActor (Trigger) -> Void = { _ in }
     /// Whether the pointer is over a browser window.
     var isOverBrowser: @MainActor () -> Bool = { false }
 
@@ -65,8 +65,9 @@ final class EventTap: @unchecked Sendable {
         }
 
         let button = Int(event.getIntegerValueField(.mouseEventButtonNumber))
+        let modifiers = KeyModifiers(eventFlags: event.flags.rawValue)
         let isOverBrowser = { MainActor.assumeIsolated { self.isOverBrowser() } }
-        switch router.route(button: button, phase: phase, isOverBrowser: isOverBrowser) {
+        switch router.route(button: button, modifiers: modifiers, phase: phase, isOverBrowser: isOverBrowser) {
         case .pass:
             return Unmanaged.passUnretained(event)
         case .rewrite(let newButton):
@@ -80,8 +81,8 @@ final class EventTap: @unchecked Sendable {
         case .release(let mapping):
             dispatch { $0.onAction(mapping, .up) }
             return nil
-        case .captured(let button):
-            dispatch { $0.onCapture(button) }
+        case .captured(let trigger):
+            dispatch { $0.onCapture(trigger) }
             return nil
         }
     }

@@ -47,11 +47,11 @@ private struct ButtonRow: View {
     let model: AppModel
 
     private var binding: Binding<ButtonMapping> {
-        Binding(get: { model.binding(for: mapping.button) ?? mapping }, set: { model.update($0) })
+        Binding(get: { model.mapping(for: mapping.trigger) ?? mapping }, set: { model.update($0) })
     }
 
     var body: some View {
-        LabeledContent(mapping.buttonName) {
+        LabeledContent(mapping.trigger.displayName) {
             HStack(spacing: 8) {
                 switch mapping.action {
                 case .keyboardShortcut: ShortcutRecorder(shortcut: binding.shortcut).fixedSize()
@@ -59,7 +59,7 @@ private struct ButtonRow: View {
                 default: EmptyView()
                 }
 
-                Picker(mapping.buttonName, selection: binding.action) {
+                Picker(mapping.trigger.displayName, selection: binding.action) {
                     ForEach(Self.groups, id: \.self) { group in
                         ForEach(group, id: \.self) { Text($0.title).tag($0) }
                         if group != Self.groups.last { Divider() }
@@ -69,19 +69,11 @@ private struct ButtonRow: View {
                 .fixedSize()
                 .help(helpText)
 
-                // Keep the pickers lined up whether or not a row can be removed.
-                Group {
-                    if mapping.isRemovable {
-                        Button { model.remove(button: mapping.button) } label: {
-                            Image(systemName: "minus.circle")
-                        }
-                        .buttonStyle(.borderless)
-                        .help("Remove")
-                    } else {
-                        Color.clear
-                    }
+                Button { model.remove(mapping.trigger) } label: {
+                    Image(systemName: "minus.circle")
                 }
-                .frame(width: 16)
+                .buttonStyle(.borderless)
+                .help("Remove")
             }
         }
     }
@@ -104,7 +96,7 @@ private struct AddButtonRow: View {
     var body: some View {
         HStack {
             if model.isCapturing {
-                Text("Press a mouse button…")
+                Text("Hold any keys and press a mouse button…")
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button("Cancel") { model.isCapturing = false }

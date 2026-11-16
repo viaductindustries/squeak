@@ -9,7 +9,7 @@ struct ButtonRouterTests {
 
     @Test func standardSettingsSwallowBackAndForward() {
         var router = ButtonRouter()
-        for button in [ButtonMapping.back, ButtonMapping.forward] {
+        for button in [3, 4] {
             #expect(router.route(button: button, phase: .down) == .swallow)
             #expect(router.route(button: button, phase: .dragged) == .swallow)
             #expect(router.route(button: button, phase: .up) == .swallow)
@@ -99,10 +99,36 @@ struct ButtonRouterTests {
     @Test func capturingTakesOnePressAndSwallowsIt() {
         var router = ButtonRouter()
         router.isCapturing = true
-        #expect(router.route(button: 7, phase: .down) == .captured(button: 7))
+        #expect(router.route(button: 7, modifiers: [.command], phase: .down) == .captured(Trigger(button: 7, modifiers: [.command])))
         #expect(!router.isCapturing)
         #expect(router.route(button: 7, phase: .up) == .swallow)
         #expect(router.route(button: 7, phase: .down) == .pass)
+    }
+
+    @Test func heldKeysPickTheMatchingRow() {
+        var router = router(
+            ButtonMapping(button: 2, action: .normal),
+            ButtonMapping(button: 2, modifiers: [.command], action: .missionControl),
+            ButtonMapping(button: 2, modifiers: [.command, .shift], action: .doNothing)
+        )
+        #expect(router.route(button: 2, phase: .down) == .pass)
+        _ = router.route(button: 2, phase: .up)
+        let commandMiddle = ButtonMapping(button: 2, modifiers: [.command], action: .missionControl)
+        #expect(router.route(button: 2, modifiers: [.command], phase: .down) == .trigger(commandMiddle))
+        #expect(router.route(button: 2, modifiers: [.command], phase: .up) == .release(commandMiddle))
+        #expect(router.route(button: 2, modifiers: [.command, .shift], phase: .down) == .swallow)
+    }
+
+    @Test func unmatchedKeysFallBackToThePlainButton() {
+        var router = ButtonRouter()
+        #expect(router.route(button: 3, modifiers: [.option], phase: .down) == .swallow)
+        #expect(router.route(button: 3, modifiers: [.option], phase: .up) == .swallow)
+    }
+
+    @Test func keysWithoutAPlainRowPass() {
+        var router = router(ButtonMapping(button: 2, modifiers: [.command], action: .missionControl))
+        #expect(router.route(button: 2, phase: .down) == .pass)
+        #expect(router.route(button: 2, modifiers: [.option], phase: .down) == .pass)
     }
 
     @Test func releaseWithoutPressPasses() {
@@ -117,32 +143,53 @@ struct SqueekSettingsTests {
         #expect(SqueekSettings.decode(Data("nope".utf8)) == .standard)
     }
 
-    @Test func roundTripsAndRestoresStandardButtons() {
+    @Test func roundTrips() {
         let settings = SqueekSettings(buttons: [
             ButtonMapping(button: 6, action: .openApp, appURL: URL(fileURLWithPath: "/Applications/Safari.app")),
-            ButtonMapping(button: 3, action: .missionControl),
+            ButtonMapping(button: 2, modifiers: [.command], action: .missionControl),
         ])
         let decoded = SqueekSettings.decode(settings.encoded())
-        #expect(decoded.buttons.map(\.button) == [3, 4, 6])
-        #expect(decoded.buttons[0].action == .missionControl)
-        #expect(decoded.buttons[2].appURL?.path == "/Applications/Safari.app")
+        #expect(decoded == settings)
+        #expect(decoded.buttons.map(\.trigger) == [Trigger(button: 2, modifiers: [.command]), Trigger(button: 6)])
     }
 
-    @Test func standardButtonsCannotBeRemoved() {
+    @Test func removingEveryRowIsKept() {
         var settings = SqueekSettings.standard
-        settings.add(button: 6)
-        settings.add(button: 6)
-        #expect(settings.buttons.map(\.button) == [3, 4, 6])
-        settings.remove(button: 3)
-        settings.remove(button: 6)
-        #expect(settings.buttons.map(\.button) == [3, 4])
+        settings.remove(Trigger(button: 3))
+        settings.remove(Trigger(button: 4))
+        #expect(SqueekSettings.decode(settings.encoded()).buttons.isEmpty)
     }
 
-    @Test func buttonNames() {
-        #expect(ButtonMapping.name(forButton: 2) == "Middle")
-        #expect(ButtonMapping.name(forButton: 3) == "Back")
-        #expect(ButtonMapping.name(forButton: 4) == "Forward")
-        #expect(ButtonMapping.name(forButton: 5) == "Button 6")
+    @Test func settingsSavedBeforeModifiersStillLoad() {
+        let data = Data(#"{"buttons":[{"button":3,"action":"missionControl"}]}"#.utf8)
+        #expect(SqueekSettings.decode(data).buttons == [ButtonMapping(button: 3, action: .missionControl)])
+    }
+
+    @Test func addingTheSameTriggerTwiceKeepsOneRow() {
+        var settings = SqueekSettings(buttons: [])
+        settings.add(Trigger(button: 2, modifiers: [.command]))
+        settings.add(Trigger(button: 2, modifiers: [.command]))
+        settings.add(Trigger(button: 2, modifiers: [.option, .shift]))
+        settings.add(Trigger(button: 2))
+        #expect(settings.buttons.map(\.trigger) == [
+            Trigger(button: 2),
+            Trigger(button: 2, modifiers: [.command]),
+            Trigger(button: 2, modifiers: [.option, .shift]),
+        ])
+    }
+
+    @Test func triggerNames() {
+        #expect(Trigger(button: 2).displayName == "Middle")
+        #expect(Trigger(button: 3).displayName == "Back")
+        #expect(Trigger(button: 4).displayName == "Forward")
+        #expect(Trigger(button: 5).displayName == "Button 6")
+        #expect(Trigger(button: 2, modifiers: [.command, .option]).displayName == "⌥⌘ Middle")
+    }
+
+    @Test func eventFlagsKeepOnlyTheFourModifiers() {
+        let capsLockAndFn: UInt64 = 0x0001_0000 | 0x0080_0000
+        let flags = KeyModifiers.command.rawValue | KeyModifiers.shift.rawValue | capsLockAndFn
+        #expect(KeyModifiers(eventFlags: flags) == [.command, .shift])
     }
 
     @Test func shortcutDisplayName() {

@@ -46,7 +46,7 @@ final class AppModel {
         tap.router.update(settings)
         tap.router.isPaused = isPaused
         tap.onAction = { mapping, phase in ActionRunner.run(mapping, phase: phase) }
-        tap.onCapture = { [weak self] button in self?.captured(button: button) }
+        tap.onCapture = { [weak self] trigger in self?.captured(trigger) }
         tap.isOverBrowser = { [browsers] in browsers.isBrowserUnderPointer() }
 
         // Ask once at launch; macOS shows its own prompt.
@@ -73,17 +73,16 @@ final class AppModel {
         hasAccess && !isPaused ? "computermouse.fill" : "computermouse"
     }
 
-    func binding(for button: Int) -> ButtonMapping? {
-        settings.buttons.first { $0.button == button }
+    func mapping(for trigger: Trigger) -> ButtonMapping? {
+        settings.mapping(for: trigger)
     }
 
     func update(_ mapping: ButtonMapping) {
-        guard let index = settings.buttons.firstIndex(where: { $0.button == mapping.button }) else { return }
-        settings.buttons[index] = mapping
+        settings.update(mapping)
     }
 
-    func remove(button: Int) {
-        settings.remove(button: button)
+    func remove(_ trigger: Trigger) {
+        settings.remove(trigger)
     }
 
     func openAccessibilitySettings() {
@@ -104,9 +103,9 @@ final class AppModel {
         opensAtLogin = SMAppService.mainApp.status == .enabled
     }
 
-    private func captured(button: Int) {
+    private func captured(_ trigger: Trigger) {
         isCapturing = false
-        settings.add(button: button)
+        settings.add(trigger)
     }
 
     private func refreshAccess() {

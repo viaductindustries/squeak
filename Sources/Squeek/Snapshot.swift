@@ -15,6 +15,8 @@ enum Snapshot {
 
         let busy = SqueekSettings(buttons: [
             ButtonMapping(button: 2, action: .normal),
+            ButtonMapping(button: 2, modifiers: [.command], action: .missionControl),
+            ButtonMapping(button: 2, modifiers: [.option, .shift], action: .showDesktop),
             ButtonMapping(button: 3, action: .keyboardShortcut,
                           shortcut: KeyShortcut(keyCode: 33, modifiers: [.command], keyName: "[")),
             ButtonMapping(button: 4, action: .passToOtherApps),
@@ -26,6 +28,7 @@ enum Snapshot {
             ("standard", AppModel(preview: .standard, hasAccess: true)),
             ("no-access", AppModel(preview: .standard, hasAccess: false)),
             ("busy", AppModel(preview: busy, hasAccess: true)),
+            ("empty", AppModel(preview: SqueekSettings(buttons: []), hasAccess: true)),
         ]
         for (name, model) in states {
             for appearance in [NSAppearance.Name.aqua, .darkAqua] {

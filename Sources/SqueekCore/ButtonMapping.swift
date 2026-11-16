@@ -41,6 +41,14 @@ public struct KeyModifiers: OptionSet, Codable, Hashable, Sendable {
     public static let option = KeyModifiers(rawValue: 0x0008_0000)
     public static let command = KeyModifiers(rawValue: 0x0010_0000)
 
+    public static let all: KeyModifiers = [.shift, .control, .option, .command]
+
+    /// Picks out the four modifier keys from an event's flags, ignoring
+    /// things like Caps Lock and Fn.
+    public init(eventFlags: UInt64) {
+        self.init(rawValue: eventFlags & Self.all.rawValue)
+    }
+
     /// Symbols in the order macOS menus show them.
     public var symbols: String {
         var result = ""
@@ -69,42 +77,72 @@ public struct KeyShortcut: Codable, Hashable, Sendable {
     public var displayName: String { modifiers.symbols + keyName }
 }
 
-/// The action assigned to one mouse button.
+/// A mouse button pressed while holding some modifier keys, such as ⌘ + middle.
+public struct Trigger: Hashable, Comparable, Sendable {
+    /// The macOS button number: 2 is middle, 3 is back, 4 is forward.
+    public var button: Int
+    public var modifiers: KeyModifiers
+
+    public init(button: Int, modifiers: KeyModifiers = []) {
+        self.button = button
+        self.modifiers = modifiers
+    }
+
+    public var displayName: String {
+        modifiers.isEmpty ? Self.name(forButton: button) : "\(modifiers.symbols) \(Self.name(forButton: button))"
+    }
+
+    /// By button, then plain before one key before several.
+    public static func < (lhs: Trigger, rhs: Trigger) -> Bool {
+        (lhs.button, lhs.modifiers.rawValue.nonzeroBitCount, lhs.modifiers.rawValue)
+            < (rhs.button, rhs.modifiers.rawValue.nonzeroBitCount, rhs.modifiers.rawValue)
+    }
+
+    public static func name(forButton button: Int) -> String {
+        switch button {
+        case 2: "Middle"
+        case 3: "Back"
+        case 4: "Forward"
+        default: "Button \(button + 1)"
+        }
+    }
+}
+
+/// The action assigned to one trigger.
 ///
 /// The shortcut and app are kept even when another action is chosen, so
 /// switching back doesn't lose them.
 public struct ButtonMapping: Codable, Hashable, Identifiable, Sendable {
-    /// The macOS button number: 2 is middle, 3 is back, 4 is forward.
     public var button: Int
+    public var modifiers: KeyModifiers
     public var action: ActionKind
     public var shortcut: KeyShortcut?
     public var appURL: URL?
 
-    public var id: Int { button }
+    public var trigger: Trigger { Trigger(button: button, modifiers: modifiers) }
+    public var id: Trigger { trigger }
 
-    public init(button: Int, action: ActionKind = .doNothing, shortcut: KeyShortcut? = nil, appURL: URL? = nil) {
+    public init(
+        button: Int,
+        modifiers: KeyModifiers = [],
+        action: ActionKind = .doNothing,
+        shortcut: KeyShortcut? = nil,
+        appURL: URL? = nil
+    ) {
         self.button = button
+        self.modifiers = modifiers
         self.action = action
         self.shortcut = shortcut
         self.appURL = appURL
     }
 
-    public var buttonName: String { Self.name(forButton: button) }
-
-    /// Back and forward are always listed; other buttons are added by the user.
-    public var isRemovable: Bool { !Self.standardButtons.contains(button) }
-
-    public static let back = 3
-    public static let forward = 4
-    public static let standardButtons: Set<Int> = [back, forward]
-
-    public static func name(forButton button: Int) -> String {
-        switch button {
-        case 2: "Middle"
-        case back: "Back"
-        case forward: "Forward"
-        default: "Button \(button + 1)"
-        }
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        button = try container.decode(Int.self, forKey: .button)
+        modifiers = try container.decodeIfPresent(KeyModifiers.self, forKey: .modifiers) ?? []
+        action = try container.decode(ActionKind.self, forKey: .action)
+        shortcut = try container.decodeIfPresent(KeyShortcut.self, forKey: .shortcut)
+        appURL = try container.decodeIfPresent(URL.self, forKey: .appURL)
     }
 }
 
@@ -113,37 +151,43 @@ public struct SqueekSettings: Codable, Hashable, Sendable {
     public var buttons: [ButtonMapping]
 
     public init(buttons: [ButtonMapping]) {
-        self.buttons = buttons.sorted { $0.button < $1.button }
+        self.buttons = buttons.sorted { $0.trigger < $1.trigger }
     }
 
+    /// A fresh install: the side buttons do nothing, so browsers stop going
+    /// back and forward.
     public static let standard = SqueekSettings(buttons: [
-        ButtonMapping(button: ButtonMapping.back),
-        ButtonMapping(button: ButtonMapping.forward),
+        ButtonMapping(button: 3),
+        ButtonMapping(button: 4),
     ])
 
-    /// Decodes stored settings, making sure back and forward are present.
     public static func decode(_ data: Data?) -> SqueekSettings {
         guard let data, let decoded = try? JSONDecoder().decode(SqueekSettings.self, from: data) else {
             return .standard
         }
-        var buttons = decoded.buttons
-        for button in ButtonMapping.standardButtons where !buttons.contains(where: { $0.button == button }) {
-            buttons.append(ButtonMapping(button: button))
-        }
-        return SqueekSettings(buttons: buttons)
+        return SqueekSettings(buttons: decoded.buttons)
     }
 
     public func encoded() -> Data {
         (try? JSONEncoder().encode(self)) ?? Data()
     }
 
-    public mutating func add(button: Int) {
-        guard !buttons.contains(where: { $0.button == button }) else { return }
-        buttons.append(ButtonMapping(button: button))
-        buttons.sort { $0.button < $1.button }
+    public func mapping(for trigger: Trigger) -> ButtonMapping? {
+        buttons.first { $0.trigger == trigger }
     }
 
-    public mutating func remove(button: Int) {
-        buttons.removeAll { $0.button == button && $0.isRemovable }
+    public mutating func add(_ trigger: Trigger) {
+        guard mapping(for: trigger) == nil else { return }
+        buttons.append(ButtonMapping(button: trigger.button, modifiers: trigger.modifiers))
+        buttons.sort { $0.trigger < $1.trigger }
+    }
+
+    public mutating func update(_ mapping: ButtonMapping) {
+        guard let index = buttons.firstIndex(where: { $0.trigger == mapping.trigger }) else { return }
+        buttons[index] = mapping
+    }
+
+    public mutating func remove(_ trigger: Trigger) {
+        buttons.removeAll { $0.trigger == trigger }
     }
 }

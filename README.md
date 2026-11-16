@@ -16,8 +16,12 @@ By default the side buttons do nothing, so browsers stop going back and forward.
 | Previous desktop, Next desktop | Sends ⌃← and ⌃→, so those shortcuts need to be turned on in System Settings ▸ Keyboard ▸ Keyboard Shortcuts ▸ Mission Control (they are by default). |
 | Open app | Opens or switches to an app. |
 
-Back and Forward are always listed. **Add Button…** waits for you to press any
-other button (middle, or extra buttons on bigger mice). Left and right clicks
+A fresh install lists Back and Forward set to Do nothing. Any row can be
+removed, and a button with no row behaves as macOS normally would.
+**Add Button…** waits for you to press a button (middle, back, forward or extra
+buttons on bigger mice), recording any of ⌘ ⌥ ⌃ ⇧ you're holding, so ⌘ + Middle
+can do something different from a plain middle click. When you hold keys that
+have no row of their own, the plain button's row applies. Left and right clicks
 are never touched.
 
 ## Building
