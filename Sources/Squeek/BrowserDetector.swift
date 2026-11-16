@@ -34,9 +34,22 @@ final class BrowserDetector {
         "net.imput.helium",
     ]
 
+    /// Looked up away from the event tap, which has to answer quickly.
+    private var defaultBrowser: String?
+    private var refreshTimer: Timer?
+
+    init() {
+        refreshDefaultBrowser()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshDefaultBrowser() }
+        }
+    }
+
+    /// Called from the event tap, so it only asks the window server about one
+    /// window and looks up a running app; nothing that touches the disk.
     func isBrowserUnderPointer() -> Bool {
         guard let bundleID = appUnderPointer()?.bundleIdentifier else { return false }
-        return Self.knownBrowsers.contains(bundleID) || bundleID == defaultBrowser()
+        return Self.knownBrowsers.contains(bundleID) || bundleID == defaultBrowser
     }
 
     private func appUnderPointer() -> NSRunningApplication? {
@@ -50,8 +63,8 @@ final class BrowserDetector {
         return NSWorkspace.shared.frontmostApplication
     }
 
-    private func defaultBrowser() -> String? {
+    private func refreshDefaultBrowser() {
         let url = NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!)
-        return url.flatMap { Bundle(url: $0)?.bundleIdentifier }
+        defaultBrowser = url.flatMap { Bundle(url: $0)?.bundleIdentifier }
     }
 }
