@@ -40,10 +40,24 @@ struct MenuContent: View {
         Divider()
         Button("Settings…") {
             openWindow(id: SettingsView.windowID)
-            NSApp.activate()
+            bringSettingsToFront()
         }
         .keyboardShortcut(",")
         Button("Quit Squeek") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    /// Squeek has no Dock icon, so macOS doesn't bring its windows forward on
+    /// its own. Wait for the menu to close (it hands focus back to the app
+    /// underneath), then activate and raise the window explicitly.
+    private func bringSettingsToFront() {
+        DispatchQueue.main.async {
+            NSApp.activate()
+            let windows = NSApp.windows.filter { $0.identifier?.rawValue.contains(SettingsView.windowID) == true }
+            for window in windows {
+                window.makeKeyAndOrderFront(nil)
+                window.orderFrontRegardless()
+            }
+        }
     }
 }
