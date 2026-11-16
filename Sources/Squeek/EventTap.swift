@@ -18,6 +18,7 @@ final class EventTap: @unchecked Sendable {
     /// Whether the pointer is over a browser window.
     var isOverBrowser: @MainActor () -> Bool = { false }
 
+    private var generation = 0
     private var port: CFMachPort?
     private var source: CFRunLoopSource?
 
@@ -47,6 +48,7 @@ final class EventTap: @unchecked Sendable {
     }
 
     func stop() {
+        generation += 1
         router.reset()
         if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
         if let port { CFMachPortInvalidate(port) }
@@ -95,8 +97,12 @@ final class EventTap: @unchecked Sendable {
 
     /// Runs work after the callback returns, so the tap never waits on an action.
     private func dispatch(_ work: @escaping @MainActor (EventTap) -> Void) {
+        let generation = generation
         DispatchQueue.main.async {
-            MainActor.assumeIsolated { work(self) }
+            MainActor.assumeIsolated {
+                guard self.generation == generation else { return }
+                work(self)
+            }
         }
     }
 }
