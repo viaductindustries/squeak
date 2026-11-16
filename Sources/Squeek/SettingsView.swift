@@ -31,7 +31,16 @@ struct SettingsView: View {
                 .tabItem { Label("About", systemImage: "info.circle") }
                 .tag(Tab.about)
         }
-        .onDisappear { model.isCapturing = false }
+        .onChange(of: tab) { _, _ in cancelCapture() }
+        .onDisappear(perform: cancelCapture)
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { _ in
+            cancelCapture()
+        }
+    }
+
+    private func cancelCapture() {
+        model.isCapturing = false
+        ShortcutRecorder.stopActive()
     }
 
     /// Every tab is the same width so the window only changes height.
@@ -67,6 +76,9 @@ struct ButtonsTab: View {
         }
         .padding(20)
         .frame(width: SettingsView.width)
+        .onChange(of: model.settings.buttons.map(\.trigger)) { _, triggers in
+            if let selection, !triggers.contains(selection) { self.selection = nil }
+        }
         .onChange(of: model.lastAdded) { _, trigger in
             if let trigger { selection = trigger }
         }
@@ -98,7 +110,7 @@ struct ButtonsTab: View {
     }
 
     private func removeSelected() {
-        guard let selection else { return }
+        guard !model.isCapturing, let selection else { return }
         model.remove(selection)
         self.selection = nil
     }
@@ -199,7 +211,10 @@ private struct AddRemoveBar: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Button { model.isCapturing = true } label: {
+            Button {
+                ShortcutRecorder.stopActive()
+                model.isCapturing = true
+            } label: {
                 Image(systemName: "plus").frame(width: 24, height: 20)
             }
             .disabled(!model.hasAccess || model.isCapturing)
@@ -232,7 +247,7 @@ private struct AddRemoveBar: View {
     }
 
     private func remove() {
-        guard let selection else { return }
+        guard !model.isCapturing, let selection else { return }
         model.remove(selection)
         self.selection = nil
     }

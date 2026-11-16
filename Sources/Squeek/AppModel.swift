@@ -25,7 +25,10 @@ final class AppModel {
 
     /// True while waiting for the user to press the button they want to add.
     var isCapturing = false {
-        didSet { tap.router.isCapturing = isCapturing }
+        didSet {
+            if isCapturing { lastAdded = nil }
+            tap.router.isCapturing = isCapturing
+        }
     }
 
     /// The button most recently added, so the list can select it.
@@ -113,6 +116,7 @@ final class AppModel {
     }
 
     private func captured(_ trigger: Trigger) {
+        guard isCapturing else { return }
         isCapturing = false
         settings.add(trigger)
         lastAdded = trigger
@@ -127,6 +131,7 @@ final class AppModel {
             ActionRunner.releaseAllKeys()
         }
         let running = tap.isRunning
+        if !running { isCapturing = false }
         if hasAccess != running { hasAccess = running }
     }
 }

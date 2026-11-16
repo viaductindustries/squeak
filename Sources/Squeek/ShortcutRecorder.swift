@@ -20,6 +20,13 @@ struct ShortcutRecorder: View {
         }
         .help(isRecording ? "Press Escape to cancel" : "")
         .onDisappear(perform: stop)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            stop()
+        }
+    }
+
+    static func stopActive() {
+        active?.stop()
     }
 
     private func toggle() {
