@@ -12,9 +12,9 @@ enum ActionRunner {
             // Hold the keys for as long as the button is held, so shortcuts
             // like push-to-talk work.
             if phase == .down, let shortcut = mapping.shortcut {
-                post(keyboard.press(shortcut, for: mapping.trigger, physicallyHeld: mapping.modifiers))
+                post(keyboard.press(shortcut, for: mapping.trigger, physicallyHeld: physicalModifiers))
             } else if phase == .up {
-                post(keyboard.release(for: mapping.trigger))
+                post(keyboard.release(for: mapping.trigger, physicallyHeld: physicalModifiers))
             }
         default:
             guard phase == .down else { return }
@@ -41,11 +41,18 @@ enum ActionRunner {
     /// Lets go of any keys held for buttons, so nothing is left stuck down
     /// when Squeek stops or loses track of the buttons.
     static func releaseAllKeys() {
-        post(keyboard.releaseAll())
+        post(keyboard.releaseAll(physicallyHeld: physicalModifiers))
+    }
+
+    // Keep our state separate from hardware so a synthetic modifier cannot
+    // be mistaken for a key the user is physically holding.
+    private static let source = CGEventSource(stateID: .privateState)
+
+    private static var physicalModifiers: KeyModifiers {
+        KeyModifiers(eventFlags: CGEventSource.flagsState(.hidSystemState).rawValue)
     }
 
     private static func post(_ events: [SyntheticKeyEvent]) {
-        let source = CGEventSource(stateID: .hidSystemState)
         for key in events {
             guard let event = CGEvent(keyboardEventSource: source, virtualKey: key.keyCode, keyDown: key.isDown) else { continue }
             if key.isModifier { event.type = .flagsChanged }
@@ -63,7 +70,6 @@ enum ActionRunner {
     }
 
     private static func postKey(_ keyCode: UInt16, modifiers: CGEventFlags, down: Bool) {
-        let source = CGEventSource(stateID: .hidSystemState)
         guard let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: down) else { return }
         event.flags = modifiers
         event.post(tap: .cghidEventTap)

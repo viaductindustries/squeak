@@ -40,7 +40,39 @@ struct SyntheticKeyboardTests {
     @Test func leavesModifiersTheUserIsHoldingAlone() {
         var keyboard = SyntheticKeyboard()
         #expect(keyboard.press(commandK, for: back, physicallyHeld: [.command]) == [key(40, true, [.command])])
+        #expect(keyboard.release(for: back, physicallyHeld: [.command]) == [key(40, false, [.command])])
+    }
+
+    @Test func fallbackModifiersDoNotReleasePhysicalKeys() {
+        var keyboard = SyntheticKeyboard()
+        #expect(keyboard.press(commandK, for: back, physicallyHeld: [.option, .command]) == [
+            key(40, true, [.option, .command]),
+        ])
+        #expect(keyboard.release(for: back, physicallyHeld: [.option, .command]) == [
+            key(40, false, [.option, .command]),
+        ])
+    }
+
+    @Test func releasedPhysicalModifierIsNotReasserted() {
+        var keyboard = SyntheticKeyboard()
+        _ = keyboard.press(commandK, for: back, physicallyHeld: [.command])
+        #expect(keyboard.release(for: back) == [key(40, false)])
+    }
+
+    @Test func physicalModifierPressedDuringHoldIsNotReleased() {
+        var keyboard = SyntheticKeyboard()
+        _ = keyboard.press(commandK, for: back)
+        #expect(keyboard.releaseAll(physicallyHeld: [.command]) == [key(40, false, [.command])])
+        #expect(!keyboard.isHoldingKeys)
+    }
+
+    @Test func existingSyntheticModifierRemainsOwnedWhenAlsoPhysicallyHeld() {
+        var keyboard = SyntheticKeyboard()
+        _ = keyboard.press(commandK, for: back)
+        let commandJ = KeyShortcut(keyCode: 38, modifiers: [.command], keyName: "J")
+        #expect(keyboard.press(commandJ, for: forward, physicallyHeld: [.command]) == [key(38, true, [.command])])
         #expect(keyboard.release(for: back) == [key(40, false, [.command])])
+        #expect(keyboard.release(for: forward) == [key(38, false, [.command]), modifier(55, false, [])])
     }
 
     @Test func sharedKeyStaysDownUntilTheLastButtonIsReleased() {

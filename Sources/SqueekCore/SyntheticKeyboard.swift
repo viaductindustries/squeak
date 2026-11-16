@@ -26,7 +26,6 @@ public struct SyntheticKeyEvent: Equatable, Sendable {
 public struct SyntheticKeyboard: Sendable {
     private struct Hold: Sendable {
         var keyCode: UInt16
-        var shortcutModifiers: KeyModifiers
         /// The modifiers this hold pressed, in order.
         var pressedModifiers: [KeyModifiers]
     }
@@ -62,11 +61,12 @@ public struct SyntheticKeyboard: Sendable {
         var pressed: [KeyModifiers] = []
 
         for (modifier, keyCode) in Self.modifierKeys
-        where shortcut.modifiers.contains(modifier) && !physicallyHeld.contains(modifier) {
+        where shortcut.modifiers.contains(modifier)
+            && (!physicallyHeld.contains(modifier) || modifierCounts[modifier.rawValue, default: 0] > 0) {
             pressed.append(modifier)
             modifierCounts[modifier.rawValue, default: 0] += 1
             if modifierCounts[modifier.rawValue] == 1 {
-                events.append(SyntheticKeyEvent(keyCode: keyCode, isDown: true, isModifier: true, flags: heldModifiers))
+                events.append(SyntheticKeyEvent(keyCode: keyCode, isDown: true, isModifier: true, flags: heldModifiers.union(physicallyHeld)))
             }
         }
 
@@ -74,16 +74,16 @@ public struct SyntheticKeyboard: Sendable {
         if keyCounts[shortcut.keyCode] == 1 {
             events.append(SyntheticKeyEvent(
                 keyCode: shortcut.keyCode, isDown: true, isModifier: false,
-                flags: heldModifiers.union(shortcut.modifiers)
+                flags: heldModifiers.union(physicallyHeld)
             ))
         }
 
-        holds[owner] = Hold(keyCode: shortcut.keyCode, shortcutModifiers: shortcut.modifiers, pressedModifiers: pressed)
+        holds[owner] = Hold(keyCode: shortcut.keyCode, pressedModifiers: pressed)
         return events
     }
 
     /// Releases whatever `owner` pressed, keeping keys another button still holds.
-    public mutating func release(for owner: Trigger) -> [SyntheticKeyEvent] {
+    public mutating func release(for owner: Trigger, physicallyHeld: KeyModifiers = []) -> [SyntheticKeyEvent] {
         guard let hold = holds.removeValue(forKey: owner) else { return [] }
         var events: [SyntheticKeyEvent] = []
 
@@ -92,7 +92,7 @@ public struct SyntheticKeyboard: Sendable {
             keyCounts[hold.keyCode] = nil
             events.append(SyntheticKeyEvent(
                 keyCode: hold.keyCode, isDown: false, isModifier: false,
-                flags: heldModifiers.union(hold.shortcutModifiers)
+                flags: heldModifiers.union(physicallyHeld)
             ))
         }
 
@@ -101,14 +101,16 @@ public struct SyntheticKeyboard: Sendable {
             if modifierCounts[modifier.rawValue] == 0 {
                 modifierCounts[modifier.rawValue] = nil
                 let keyCode = Self.modifierKeys.first { $0.0 == modifier }!.1
-                events.append(SyntheticKeyEvent(keyCode: keyCode, isDown: false, isModifier: true, flags: heldModifiers))
+                if !physicallyHeld.contains(modifier) {
+                    events.append(SyntheticKeyEvent(keyCode: keyCode, isDown: false, isModifier: true, flags: heldModifiers.union(physicallyHeld)))
+                }
             }
         }
         return events
     }
 
     /// Releases everything, for when Squeek stops or loses track of buttons.
-    public mutating func releaseAll() -> [SyntheticKeyEvent] {
-        holds.keys.sorted().flatMap { release(for: $0) }
+    public mutating func releaseAll(physicallyHeld: KeyModifiers = []) -> [SyntheticKeyEvent] {
+        holds.keys.sorted().flatMap { release(for: $0, physicallyHeld: physicallyHeld) }
     }
 }
