@@ -1,0 +1,23 @@
+{
+  "fill": {
+    "linear-gradient": [
+      "display-p3:0.65782,0.83667,0.98460,1.00000",
+      "display-p3:0.31942,0.51907,0.88232,1.00000"
+    ]
+  },
+  "groups": [
+    {
+      "layers": [
+        { "image-name": "details.svg", "name": "details", "glass": false },
+        { "image-name": "body.svg", "name": "body", "glass": true },
+        { "image-name": "ears.svg", "name": "ears", "glass": false },
+        { "image-name": "tail.svg", "name": "tail", "glass": false }
+      ],
+      "shadow": { "kind": "neutral", "opacity": 0.5 },
+      "translucency": { "enabled": false, "value": 0.5 }
+    }
+  ],
+  "supported-platforms": {
+    "squares": ["macOS"]
+  }
+}

@@ -8,6 +8,10 @@
 	<string>Squeek</string>
 	<key>CFBundleExecutable</key>
 	<string>Squeek</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.viaduct.squeek</string>
 	<key>CFBundleInfoDictionaryVersion</key>

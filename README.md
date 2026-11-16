@@ -32,6 +32,10 @@ Accessibility). The build is signed with your Apple Development certificate so
 the permission survives rebuilds. Use `make install SIGN_ID="…"` to sign with
 something else.
 
+The app icon is `Support/AppIcon.icon`; open it in Icon Composer (inside
+Xcode) to change it. The explored options are in
+`docs/design/explorations/app-icon/`.
+
 `swift run Squeek --snapshot <directory>` renders the settings window in a few
 states, in light and dark, without touching your settings or mouse.
 
