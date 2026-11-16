@@ -316,7 +316,7 @@ struct AboutTab: View {
 
     private var version: String {
         let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let short = info?["CFBundleShortVersionString"] as? String ?? "0.0.0"
         return "Version \(short)"
     }
 

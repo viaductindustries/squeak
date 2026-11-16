@@ -3,3 +3,8 @@ build/
 .swiftpm/
 *.xcodeproj/
 .DS_Store
+
+# Distribution credentials must only be stored in GitHub secrets.
+*.p12
+*.p8
+*.keychain-db

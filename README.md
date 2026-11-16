@@ -25,17 +25,28 @@ do something different from a plain middle click. Select a row to change it.
 When you hold keys that have no row of their own, the plain button's row
 applies. Left and right clicks are never touched.
 
+## Installing
+
+```sh
+brew install --cask viaductindustries/tap/squeak
+```
+
+Or download the latest ZIP from
+[Releases](https://github.com/viaductindustries/squeak/releases). Squeak needs
+**Accessibility** access (System Settings ▸ Privacy & Security ▸
+Accessibility), and asks for it on first launch.
+
 ## Building
 
 ```sh
-make install   # build, sign, copy to /Applications and open
-make test      # run the tests
+swift test                       # run the tests
+scripts/build-app.sh --install   # build, sign, copy to /Applications and open
 ```
 
-Squeak needs **Accessibility** access (System Settings ▸ Privacy & Security ▸
-Accessibility). The build is signed with your Apple Development certificate so
-the permission survives rebuilds. Use `make install SIGN_ID="…"` to sign with
-something else.
+Builds are signed with your Apple Development certificate, so the
+Accessibility permission survives rebuilds. Set `SIGN_ID` to sign with
+something else. Releases are built, signed and notarized on GitHub Actions; see
+[docs/releases.md](docs/releases.md).
 
 The app icon is `Support/AppIcon.icon`; open it in Icon Composer (inside
 Xcode) to change it. The explored options are in
