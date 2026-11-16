@@ -9,9 +9,9 @@ app:
 	rm -rf $(APP)
 	mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	cp Support/Info.plist $(APP)/Contents/Info.plist
-	xcrun actool Support/AppIcon.icon --compile $(APP)/Contents/Resources \
+	xcrun actool $(CURDIR)/Support/AppIcon.icon --compile $(CURDIR)/$(APP)/Contents/Resources \
 		--platform macosx --minimum-deployment-target 15.0 --app-icon AppIcon \
-		--output-partial-info-plist build/icon-info.plist > /dev/null
+		--output-partial-info-plist $(CURDIR)/build/icon-info.plist > /dev/null
 	cp "$$(swift build -c release --show-bin-path)/Squeek" $(APP)/Contents/MacOS/Squeek
 	codesign --force --options runtime --sign "$(SIGN_ID)" $(APP)
 
