@@ -1,0 +1,122 @@
+import AppKit
+import ApplicationServices
+import Observation
+import ServiceManagement
+import SqueekCore
+
+@MainActor
+@Observable
+final class AppModel {
+    var settings: SqueekSettings {
+        didSet {
+            guard settings != oldValue, !isPreview else { return }
+            UserDefaults.standard.set(settings.encoded(), forKey: Self.settingsKey)
+            tap.router.update(settings)
+        }
+    }
+
+    var isPaused: Bool {
+        didSet {
+            guard !isPreview else { return }
+            UserDefaults.standard.set(isPaused, forKey: Self.pausedKey)
+            tap.router.isPaused = isPaused
+        }
+    }
+
+    /// True while waiting for the user to press the button they want to add.
+    var isCapturing = false {
+        didSet { tap.router.isCapturing = isCapturing }
+    }
+
+    private(set) var hasAccess = false
+    private(set) var opensAtLogin = SMAppService.mainApp.status == .enabled
+
+    @ObservationIgnored private let tap = EventTap()
+    @ObservationIgnored private var accessTimer: Timer?
+    @ObservationIgnored private let browsers = BrowserDetector()
+    @ObservationIgnored private let isPreview: Bool
+
+    private static let settingsKey = "settings"
+    private static let pausedKey = "paused"
+
+    init() {
+        isPreview = false
+        settings = SqueekSettings.decode(UserDefaults.standard.data(forKey: Self.settingsKey))
+        isPaused = UserDefaults.standard.bool(forKey: Self.pausedKey)
+        tap.router.update(settings)
+        tap.router.isPaused = isPaused
+        tap.onAction = { mapping, phase in ActionRunner.run(mapping, phase: phase) }
+        tap.onCapture = { [weak self] button in self?.captured(button: button) }
+        tap.isOverBrowser = { [browsers] in browsers.isBrowserUnderPointer() }
+
+        // Ask once at launch; macOS shows its own prompt.
+        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+        AXIsProcessTrustedWithOptions(options)
+        refreshAccess()
+
+        // Access can be granted or taken away in System Settings at any time.
+        accessTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshAccess() }
+        }
+    }
+
+    /// A model that shows the given state without touching saved settings or
+    /// mouse events. Used to render the settings window during development.
+    init(preview settings: SqueekSettings, hasAccess: Bool) {
+        isPreview = true
+        self.settings = settings
+        isPaused = false
+        self.hasAccess = hasAccess
+    }
+
+    var menuBarSymbol: String {
+        hasAccess && !isPaused ? "computermouse.fill" : "computermouse"
+    }
+
+    func binding(for button: Int) -> ButtonMapping? {
+        settings.buttons.first { $0.button == button }
+    }
+
+    func update(_ mapping: ButtonMapping) {
+        guard let index = settings.buttons.firstIndex(where: { $0.button == mapping.button }) else { return }
+        settings.buttons[index] = mapping
+    }
+
+    func remove(button: Int) {
+        settings.remove(button: button)
+    }
+
+    func openAccessibilitySettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+        NSWorkspace.shared.open(url)
+    }
+
+    func setOpensAtLogin(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            NSAlert(error: error).runModal()
+        }
+        opensAtLogin = SMAppService.mainApp.status == .enabled
+    }
+
+    private func captured(button: Int) {
+        isCapturing = false
+        settings.add(button: button)
+    }
+
+    private func refreshAccess() {
+        let trusted = AXIsProcessTrusted()
+        if trusted, !tap.isRunning {
+            tap.start()
+        } else if !trusted, tap.isRunning {
+            tap.stop()
+        }
+        let running = tap.isRunning
+        if hasAccess != running { hasAccess = running }
+    }
+}
