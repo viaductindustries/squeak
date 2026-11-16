@@ -6,6 +6,10 @@ struct SettingsView: View {
     static let windowID = "settings"
 
     @Bindable var model: AppModel
+    /// The form's full height, so the window can fit it and only scroll once
+    /// it's taller than `maxHeight`.
+    @State private var contentHeight: CGFloat = 320
+    private static let maxHeight: CGFloat = 640
 
     var body: some View {
         Form {
@@ -35,9 +39,10 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .scrollDisabled(true)
-        .frame(width: 500)
-        .fixedSize(horizontal: false, vertical: true)
+        .onScrollGeometryChange(for: CGFloat.self, of: { $0.contentSize.height }) { _, height in
+            contentHeight = height
+        }
+        .frame(width: 500, height: min(contentHeight, Self.maxHeight))
         .onDisappear { model.isCapturing = false }
     }
 }

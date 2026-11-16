@@ -29,6 +29,11 @@ enum Snapshot {
             ("no-access", AppModel(preview: .standard, hasAccess: false)),
             ("busy", AppModel(preview: busy, hasAccess: true)),
             ("empty", AppModel(preview: SqueekSettings(buttons: []), hasAccess: true)),
+            ("many", AppModel(preview: SqueekSettings(buttons: (2...9).flatMap { button in
+                [[], [.command], [.option], [.shift, .command]].map {
+                    ButtonMapping(button: button, modifiers: $0, action: .missionControl)
+                }
+            }), hasAccess: true)),
         ]
         for (name, model) in states {
             for appearance in [NSAppearance.Name.aqua, .darkAqua] {
@@ -45,6 +50,9 @@ enum Snapshot {
         window.appearance = NSAppearance(named: appearance)
         let host = NSHostingView(rootView: view)
         window.contentView = host
+        window.setContentSize(host.fittingSize)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+        // The form measures itself once laid out; resize to match.
         window.setContentSize(host.fittingSize)
         host.layoutSubtreeIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
