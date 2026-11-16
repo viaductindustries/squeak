@@ -1,4 +1,4 @@
-/// One key event for Squeek to post.
+/// One key event for Squeak to post.
 public struct SyntheticKeyEvent: Equatable, Sendable {
     public var keyCode: UInt16
     public var isDown: Bool
@@ -14,7 +14,7 @@ public struct SyntheticKeyEvent: Equatable, Sendable {
     }
 }
 
-/// Tracks the keys Squeek is holding down on behalf of mouse buttons.
+/// Tracks the keys Squeak is holding down on behalf of mouse buttons.
 ///
 /// Shortcuts are held for as long as their button is held, so this works out
 /// which key events to send:
@@ -109,7 +109,7 @@ public struct SyntheticKeyboard: Sendable {
         return events
     }
 
-    /// Releases everything, for when Squeek stops or loses track of buttons.
+    /// Releases everything, for when Squeak stops or loses track of buttons.
     public mutating func releaseAll(physicallyHeld: KeyModifiers = []) -> [SyntheticKeyEvent] {
         holds.keys.sorted().flatMap { release(for: $0, physicallyHeld: physicallyHeld) }
     }

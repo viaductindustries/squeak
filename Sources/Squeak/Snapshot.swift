@@ -1,10 +1,10 @@
 #if DEBUG
 import AppKit
-import SqueekCore
+import SqueakCore
 import SwiftUI
 
 /// Renders each settings tab to PNGs so layout can be checked without
-/// clicking through the app: `swift run Squeek --snapshot <directory>`.
+/// clicking through the app: `swift run Squeak --snapshot <directory>`.
 /// The tab bar itself comes from the window, so it isn't drawn.
 @MainActor
 enum Snapshot {
@@ -14,7 +14,7 @@ enum Snapshot {
         let directory = URL(fileURLWithPath: arguments[index + 1])
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
-        let busy = SqueekSettings(buttons: [
+        let busy = SqueakSettings(buttons: [
             ButtonMapping(button: 2, action: .normal),
             ButtonMapping(button: 2, modifiers: [.command], action: .missionControl),
             ButtonMapping(button: 2, modifiers: [.option, .shift], action: .showDesktop),
@@ -27,7 +27,7 @@ enum Snapshot {
         ])
         let capturing = AppModel(preview: .standard, hasAccess: true)
         capturing.isCapturing = true
-        let many = SqueekSettings(buttons: (2...9).flatMap { button in
+        let many = SqueakSettings(buttons: (2...9).flatMap { button in
             [[], [.command], [.option], [.shift, .command]].map {
                 ButtonMapping(button: button, modifiers: $0, action: .missionControl)
             }
@@ -38,7 +38,7 @@ enum Snapshot {
             ("buttons-busy", AnyView(ButtonsTab(model: AppModel(preview: busy, hasAccess: true), selection: Trigger(button: 3)))),
             ("buttons-app", AnyView(ButtonsTab(model: AppModel(preview: busy, hasAccess: true), selection: Trigger(button: 5)))),
             ("buttons-capturing", AnyView(ButtonsTab(model: capturing))),
-            ("buttons-empty", AnyView(ButtonsTab(model: AppModel(preview: SqueekSettings(buttons: []), hasAccess: true)))),
+            ("buttons-empty", AnyView(ButtonsTab(model: AppModel(preview: SqueakSettings(buttons: []), hasAccess: true)))),
             ("buttons-many", AnyView(ButtonsTab(model: AppModel(preview: many, hasAccess: true), selection: Trigger(button: 2, modifiers: [.command])))),
             ("general", AnyView(GeneralTab(model: AppModel(preview: .standard, hasAccess: true)))),
             ("about", AnyView(AboutTab())),

@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "Squeek",
+    name: "Squeak",
     platforms: [.macOS(.v15)],
     targets: [
-        .target(name: "SqueekCore"),
-        .executableTarget(name: "Squeek", dependencies: ["SqueekCore"]),
-        .testTarget(name: "SqueekCoreTests", dependencies: ["SqueekCore"]),
+        .target(name: "SqueakCore"),
+        .executableTarget(name: "Squeak", dependencies: ["SqueakCore"]),
+        .testTarget(name: "SqueakCoreTests", dependencies: ["SqueakCore"]),
     ]
 )

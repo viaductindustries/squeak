@@ -1,5 +1,5 @@
 import AppKit
-import SqueekCore
+import SqueakCore
 import SwiftUI
 
 /// The settings window: a classic Mac preferences window with a tab per page.
@@ -62,7 +62,7 @@ struct ButtonsTab: View {
         VStack(alignment: .leading, spacing: 12) {
             if !model.hasAccess {
                 HStack {
-                    Label("Squeek needs Accessibility access.", systemImage: "exclamationmark.triangle.fill")
+                    Label("Squeak needs Accessibility access.", systemImage: "exclamationmark.triangle.fill")
                         .symbolRenderingMode(.multicolor)
                     Spacer()
                     Button("Open System Settings") { model.openAccessibilitySettings() }
@@ -298,8 +298,8 @@ struct GeneralTab: View {
                 get: { model.opensAtLogin },
                 set: { model.setOpensAtLogin($0) }
             ))
-            Toggle("Pause Squeek", isOn: $model.isPaused)
-                .help("Mouse buttons behave as if Squeek weren't running.")
+            Toggle("Pause Squeak", isOn: $model.isPaused)
+                .help("Mouse buttons behave as if Squeak weren't running.")
         }
         .formStyle(.grouped)
         .scrollDisabled(true)
@@ -311,7 +311,7 @@ struct GeneralTab: View {
 // MARK: - About
 
 struct AboutTab: View {
-    static let website = URL(string: "https://viaduct.io/squeek")!
+    static let website = URL(string: "https://viaduct.io/squeak")!
     static let copyright = "© 2026 Viaduct Industries Limited"
 
     private var version: String {
@@ -325,13 +325,13 @@ struct AboutTab: View {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .frame(width: 96, height: 96)
-            Text("Squeek")
+            Text("Squeak")
                 .font(.title2.weight(.semibold))
                 .padding(.top, 8)
             Text(version)
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
-            Link("viaduct.io/squeek", destination: Self.website)
+            Link("viaduct.io/squeak", destination: Self.website)
                 .padding(.top, 14)
                 .pointerStyle(.link)
             Text(Self.copyright)

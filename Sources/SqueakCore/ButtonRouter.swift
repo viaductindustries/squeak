@@ -32,17 +32,17 @@ public struct ButtonRouter: Sendable {
     public var isCapturing = false
     private var held: [Int: Held] = [:]
 
-    public init(settings: SqueekSettings = .standard) {
+    public init(settings: SqueakSettings = .standard) {
         update(settings)
     }
 
-    /// Forgets presses in progress, for when Squeek may have missed events
+    /// Forgets presses in progress, for when Squeak may have missed events
     /// (the tap was switched off or stopped).
     public mutating func reset() {
         held = [:]
     }
 
-    public mutating func update(_ settings: SqueekSettings) {
+    public mutating func update(_ settings: SqueakSettings) {
         mappings = Dictionary(settings.buttons.map { ($0.trigger, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
@@ -65,7 +65,7 @@ public struct ButtonRouter: Sendable {
             return result
         }
 
-        // A drag or release without a press we saw: Squeek started, or its
+        // A drag or release without a press we saw: Squeak started, or its
         // tap was switched off, while the button was down. Treat it as the
         // current settings would, without starting any action, so a stray
         // release can't make a browser go back.

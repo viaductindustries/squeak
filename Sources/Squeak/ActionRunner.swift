@@ -1,5 +1,5 @@
 import AppKit
-import SqueekCore
+import SqueakCore
 
 /// Carries out the actions assigned to buttons.
 @MainActor
@@ -39,7 +39,7 @@ enum ActionRunner {
     }
 
     /// Lets go of any keys held for buttons, so nothing is left stuck down
-    /// when Squeek stops or loses track of the buttons.
+    /// when Squeak stops or loses track of the buttons.
     static func releaseAllKeys() {
         post(keyboard.releaseAll(physicallyHeld: physicalModifiers))
     }

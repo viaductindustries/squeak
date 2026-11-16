@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct SqueekApp: App {
+struct SqueakApp: App {
     @State private var model: AppModel
 
     init() {
@@ -41,11 +41,11 @@ struct MenuContent: View {
             bringSettingsToFront()
         }
         .keyboardShortcut(",")
-        Button("Quit Squeek") { NSApp.terminate(nil) }
+        Button("Quit Squeak") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
 
-    /// Squeek has no Dock icon, so macOS doesn't bring its windows forward on
+    /// Squeak has no Dock icon, so macOS doesn't bring its windows forward on
     /// its own. Wait for the menu to close (it hands focus back to the app
     /// underneath), then activate and raise the window explicitly.
     private func bringSettingsToFront() {

@@ -1,4 +1,4 @@
-# Squeek
+# Squeak
 
 A menu bar app for macOS 15 and later that decides what your mouse buttons do.
 By default the side buttons do nothing, so browsers stop going back and forward.
@@ -32,7 +32,7 @@ make install   # build, sign, copy to /Applications and open
 make test      # run the tests
 ```
 
-Squeek needs **Accessibility** access (System Settings ▸ Privacy & Security ▸
+Squeak needs **Accessibility** access (System Settings ▸ Privacy & Security ▸
 Accessibility). The build is signed with your Apple Development certificate so
 the permission survives rebuilds. Use `make install SIGN_ID="…"` to sign with
 something else.
@@ -41,14 +41,14 @@ The app icon is `Support/AppIcon.icon`; open it in Icon Composer (inside
 Xcode) to change it. The explored options are in
 `docs/design/explorations/app-icon/`.
 
-`swift run Squeek --snapshot <directory>` renders each settings tab in a few
+`swift run Squeak --snapshot <directory>` renders each settings tab in a few
 states, in light and dark, without touching your settings or mouse. The tab
 bar comes from the window, so it isn't in the pictures.
 
 ## How it works
 
 An event tap sees every middle and extra mouse button event before apps do.
-`ButtonRouter` (in `SqueekCore`, with tests) decides on each press whether to
+`ButtonRouter` (in `SqueakCore`, with tests) decides on each press whether to
 pass it, swallow it, rewrite it as another button, or run an action, and keeps
 that decision until the button is released.
 

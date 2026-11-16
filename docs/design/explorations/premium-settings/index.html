@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Squeek settings window options</title>
+<html lang="en"><head><meta charset="utf-8"><title>Squeak settings window options</title>
 <style>
   :root { font: 13px -apple-system, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   body { margin: 0; padding: 28px 32px 60px; background: var(--desk); color: var(--text); transition: background .2s; }
@@ -127,7 +127,7 @@
 </style></head>
 <body class="light">
 <header class="page">
-  <h1>Squeek settings window</h1>
+  <h1>Squeak settings window</h1>
   <div class="theme"><button class="on" data-t="light">Light</button><button data-t="dark">Dark</button></div>
 </header>
 <div class="grid" id="grid"></div>
@@ -202,29 +202,29 @@ const MOUSE = `<svg viewBox="0 0 120 190">
 const OPTIONS = [
   { k: "A", name: "Header and footer", caption: "The same form, with the icon, name and pause switch on top and the link and version below. Each button gets a small drawing of which button it is.",
     html: `<div class="win"><div class="titlebar">${lights}</div><div class="body">
-      <div class="hero">${ICON}<div class="grow"><div class="n">Squeek</div><div class="v">Version 1.0</div></div><span class="muted">On</span><span class="switch on"></span></div>
+      <div class="hero">${ICON}<div class="grow"><div class="n">Squeak</div><div class="v">Version 1.0</div></div><span class="muted">On</span><span class="switch on"></span></div>
       <div class="sec">Buttons</div><div class="group">${formRows(r => glyph(r.b))}${addRow}</div>
       ${loginGroup}
-      <div class="foot"><span>Made by Viaduct</span><a class="link">viaduct.io/squeek</a></div>
+      <div class="foot"><span>Made by Viaduct</span><a class="link">viaduct.io/squeak</a></div>
     </div></div>` },
 
   { k: "B", name: "Tabs", caption: "A classic Mac preferences window with Buttons, General and About tabs. About carries the icon, version and link.",
     html: `<div class="panes">
       <div class="win">${toolbar("buttons")}<div class="body"><div class="sec">Buttons</div><div class="group">${formRows()}${addRow}</div></div></div>
-      <div class="win">${toolbar("about")}<div class="about">${ICON}<div class="n">Squeek</div><div class="v">Version 1.0</div><a class="link">viaduct.io/squeek</a><div class="small">© 2026 Viaduct Industries Limited</div></div></div>
+      <div class="win">${toolbar("about")}<div class="about">${ICON}<div class="n">Squeak</div><div class="v">Version 1.0</div><a class="link">viaduct.io/squeak</a><div class="small">© 2026 Viaduct Industries Limited</div></div></div>
     </div>` },
 
   { k: "C", name: "Mouse diagram", caption: "A drawing of the mouse beside the list. Selecting a row lights up its button, so it's clear which is which.",
-    html: `<div class="win wide"><div class="titlebar">${lights}<span class="t">Squeek</span></div>
+    html: `<div class="win wide"><div class="titlebar">${lights}<span class="t">Squeak</span></div>
       <div class="split"><div class="mouse">${MOUSE}<div class="cap">Middle</div></div>
       <div><div class="group">${ROWS.map((r, i) => `<div class="row ${i === 0 ? "sel" : ""}"><span class="name">${r.t}</span>${r.extra || ""}<span class="popup">${r.a}</span><span class="minus"></span></div>`).join("")}${addRow}</div>
       ${loginGroup}
-      <div class="foot" style="padding-top:12px"><span>Squeek 1.0</span><a class="link">viaduct.io/squeek</a></div></div></div>
+      <div class="foot" style="padding-top:12px"><span>Squeak 1.0</span><a class="link">viaduct.io/squeak</a></div></div></div>
     </div>` },
 
   { k: "D", name: "System Settings rows", caption: "Each button is a row with a coloured icon for its action and what it does underneath. Clicking a row opens a small sheet to change it.",
     html: `<div class="win"><div class="titlebar">${lights}</div><div class="body">
-      <div class="hero" style="padding-bottom:4px">${ICON.replace('class="icon"', 'class="icon" style="width:44px;height:44px"')}<div class="grow"><div class="n">Squeek</div><a class="link">viaduct.io/squeek</a></div></div>
+      <div class="hero" style="padding-bottom:4px">${ICON.replace('class="icon"', 'class="icon" style="width:44px;height:44px"')}<div class="grow"><div class="n">Squeak</div><a class="link">viaduct.io/squeak</a></div></div>
       <div class="sec">Buttons</div>
       <div class="group">${ROWS.map(r => `<div class="row tall indent">${tile(r.tile)}<span class="two"><span>${r.t}</span><span class="sub">${r.a}${r.detail ? ` – ${r.detail}` : ""}</span></span>${chev}</div>`).join("")}${addRow}</div>
       ${loginGroup}

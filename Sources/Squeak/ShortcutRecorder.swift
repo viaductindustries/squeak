@@ -1,5 +1,5 @@
 import AppKit
-import SqueekCore
+import SqueakCore
 import SwiftUI
 
 /// A button that records the next key combination typed.

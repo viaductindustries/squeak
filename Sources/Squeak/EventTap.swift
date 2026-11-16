@@ -1,6 +1,6 @@
 import CoreGraphics
 import Foundation
-import SqueekCore
+import SqueakCore
 
 /// Watches mouse button events system-wide and applies the router's decisions.
 ///
@@ -24,7 +24,7 @@ final class EventTap: @unchecked Sendable {
 
     var isRunning: Bool { port != nil }
 
-    /// Starts the tap. Fails if Squeek doesn't have Accessibility access.
+    /// Starts the tap. Fails if Squeak doesn't have Accessibility access.
     @discardableResult
     func start() -> Bool {
         guard port == nil else { return true }

@@ -2,12 +2,12 @@ import AppKit
 import ApplicationServices
 import Observation
 import ServiceManagement
-import SqueekCore
+import SqueakCore
 
 @MainActor
 @Observable
 final class AppModel {
-    var settings: SqueekSettings {
+    var settings: SqueakSettings {
         didSet {
             guard settings != oldValue, !isPreview else { return }
             UserDefaults.standard.set(settings.encoded(), forKey: Self.settingsKey)
@@ -47,7 +47,7 @@ final class AppModel {
 
     init() {
         isPreview = false
-        settings = SqueekSettings.decode(UserDefaults.standard.data(forKey: Self.settingsKey))
+        settings = SqueakSettings.decode(UserDefaults.standard.data(forKey: Self.settingsKey))
         isPaused = UserDefaults.standard.bool(forKey: Self.pausedKey)
         tap.router.update(settings)
         tap.router.isPaused = isPaused
@@ -74,7 +74,7 @@ final class AppModel {
 
     /// A model that shows the given state without touching saved settings or
     /// mouse events. Used to render the settings window during development.
-    init(preview settings: SqueekSettings, hasAccess: Bool) {
+    init(preview settings: SqueakSettings, hasAccess: Bool) {
         isPreview = true
         self.settings = settings
         isPaused = false

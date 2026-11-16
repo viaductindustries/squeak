@@ -1,10 +1,10 @@
 import Foundation
 import Testing
-@testable import SqueekCore
+@testable import SqueakCore
 
 struct ButtonRouterTests {
     private func router(_ mappings: ButtonMapping...) -> ButtonRouter {
-        ButtonRouter(settings: SqueekSettings(buttons: mappings))
+        ButtonRouter(settings: SqueakSettings(buttons: mappings))
     }
 
     @Test func standardSettingsSwallowBackAndForward() {
@@ -165,36 +165,36 @@ struct ButtonRouterTests {
     }
 }
 
-struct SqueekSettingsTests {
+struct SqueakSettingsTests {
     @Test func missingOrBrokenDataGivesStandardSettings() {
-        #expect(SqueekSettings.decode(nil) == .standard)
-        #expect(SqueekSettings.decode(Data("nope".utf8)) == .standard)
+        #expect(SqueakSettings.decode(nil) == .standard)
+        #expect(SqueakSettings.decode(Data("nope".utf8)) == .standard)
     }
 
     @Test func roundTrips() {
-        let settings = SqueekSettings(buttons: [
+        let settings = SqueakSettings(buttons: [
             ButtonMapping(button: 6, action: .openApp, appURL: URL(fileURLWithPath: "/Applications/Safari.app")),
             ButtonMapping(button: 2, modifiers: [.command], action: .missionControl),
         ])
-        let decoded = SqueekSettings.decode(settings.encoded())
+        let decoded = SqueakSettings.decode(settings.encoded())
         #expect(decoded == settings)
         #expect(decoded.buttons.map(\.trigger) == [Trigger(button: 2, modifiers: [.command]), Trigger(button: 6)])
     }
 
     @Test func removingEveryRowIsKept() {
-        var settings = SqueekSettings.standard
+        var settings = SqueakSettings.standard
         settings.remove(Trigger(button: 3))
         settings.remove(Trigger(button: 4))
-        #expect(SqueekSettings.decode(settings.encoded()).buttons.isEmpty)
+        #expect(SqueakSettings.decode(settings.encoded()).buttons.isEmpty)
     }
 
     @Test func settingsSavedBeforeModifiersStillLoad() {
         let data = Data(#"{"buttons":[{"button":3,"action":"missionControl"}]}"#.utf8)
-        #expect(SqueekSettings.decode(data).buttons == [ButtonMapping(button: 3, action: .missionControl)])
+        #expect(SqueakSettings.decode(data).buttons == [ButtonMapping(button: 3, action: .missionControl)])
     }
 
     @Test func addingTheSameTriggerTwiceKeepsOneRow() {
-        var settings = SqueekSettings(buttons: [])
+        var settings = SqueakSettings(buttons: [])
         settings.add(Trigger(button: 2, modifiers: [.command]))
         settings.add(Trigger(button: 2, modifiers: [.command]))
         settings.add(Trigger(button: 2, modifiers: [.option, .shift]))

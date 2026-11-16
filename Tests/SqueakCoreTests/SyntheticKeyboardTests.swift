@@ -1,5 +1,5 @@
 import Testing
-@testable import SqueekCore
+@testable import SqueakCore
 
 struct SyntheticKeyboardTests {
     private let back = Trigger(button: 3)

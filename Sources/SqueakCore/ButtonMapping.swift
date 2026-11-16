@@ -144,8 +144,8 @@ public struct ButtonMapping: Codable, Hashable, Identifiable, Sendable {
     }
 }
 
-/// Everything Squeek stores.
-public struct SqueekSettings: Codable, Hashable, Sendable {
+/// Everything Squeak stores.
+public struct SqueakSettings: Codable, Hashable, Sendable {
     public var buttons: [ButtonMapping]
 
     public init(buttons: [ButtonMapping]) {
@@ -154,16 +154,16 @@ public struct SqueekSettings: Codable, Hashable, Sendable {
 
     /// A fresh install: the side buttons do nothing, so browsers stop going
     /// back and forward.
-    public static let standard = SqueekSettings(buttons: [
+    public static let standard = SqueakSettings(buttons: [
         ButtonMapping(button: 3),
         ButtonMapping(button: 4),
     ])
 
-    public static func decode(_ data: Data?) -> SqueekSettings {
-        guard let data, let decoded = try? JSONDecoder().decode(SqueekSettings.self, from: data) else {
+    public static func decode(_ data: Data?) -> SqueakSettings {
+        guard let data, let decoded = try? JSONDecoder().decode(SqueakSettings.self, from: data) else {
             return .standard
         }
-        return SqueekSettings(buttons: decoded.buttons)
+        return SqueakSettings(buttons: decoded.buttons)
     }
 
     public func encoded() -> Data {
