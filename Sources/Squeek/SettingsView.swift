@@ -126,8 +126,10 @@ private struct TriggerLabel: View {
                 Text(String(symbol))
                     .font(.system(size: 10.5, weight: .medium))
                     .frame(minWidth: 17, minHeight: 17)
-                    .background(.background, in: RoundedRectangle(cornerRadius: 4))
-                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.separator))
+                    // Tinted from the text colour, so the keycaps follow it
+                    // when a selected row turns the text white.
+                    .background(.quinary, in: RoundedRectangle(cornerRadius: 4))
+                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.tertiary, lineWidth: 0.5))
             }
             if !trigger.modifiers.isEmpty {
                 Text("+").font(.caption).foregroundStyle(.secondary)
