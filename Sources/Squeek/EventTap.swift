@@ -13,6 +13,8 @@ final class EventTap: @unchecked Sendable {
     var onAction: @MainActor (ButtonMapping, ButtonRouter.Phase) -> Void = { _, _ in }
     /// Called when a button is pressed while adding a button.
     var onCapture: @MainActor (Trigger) -> Void = { _ in }
+    /// Called when the tap may have missed events, so held keys can be let go.
+    var onInterrupted: @MainActor () -> Void = {}
     /// Whether the pointer is over a browser window.
     var isOverBrowser: @MainActor () -> Bool = { false }
 
@@ -45,6 +47,7 @@ final class EventTap: @unchecked Sendable {
     }
 
     func stop() {
+        router.reset()
         if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
         if let port { CFMachPortInvalidate(port) }
         port = nil
@@ -56,7 +59,10 @@ final class EventTap: @unchecked Sendable {
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
             // macOS turns taps off if they're slow or during secure input.
+            // Presses may have been missed meanwhile, so start afresh.
             if let port { CGEvent.tapEnable(tap: port, enable: true) }
+            router.reset()
+            dispatch { $0.onInterrupted() }
             return Unmanaged.passUnretained(event)
         case .otherMouseDown: phase = .down
         case .otherMouseDragged: phase = .dragged

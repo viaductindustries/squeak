@@ -4,13 +4,17 @@ import SqueekCore
 /// Carries out the actions assigned to buttons.
 @MainActor
 enum ActionRunner {
+    private static var keyboard = SyntheticKeyboard()
+
     static func run(_ mapping: ButtonMapping, phase: ButtonRouter.Phase) {
         switch mapping.action {
         case .keyboardShortcut:
             // Hold the keys for as long as the button is held, so shortcuts
             // like push-to-talk work.
-            if let shortcut = mapping.shortcut {
-                postKey(shortcut.keyCode, modifiers: CGEventFlags(rawValue: shortcut.modifiers.rawValue), down: phase == .down)
+            if phase == .down, let shortcut = mapping.shortcut {
+                post(keyboard.press(shortcut, for: mapping.trigger, physicallyHeld: mapping.modifiers))
+            } else if phase == .up {
+                post(keyboard.release(for: mapping.trigger))
             }
         default:
             guard phase == .down else { return }
@@ -31,6 +35,22 @@ enum ActionRunner {
             }
         case .doNothing, .normal, .passToOtherApps, .middleClick, .keyboardShortcut:
             break
+        }
+    }
+
+    /// Lets go of any keys held for buttons, so nothing is left stuck down
+    /// when Squeek stops or loses track of the buttons.
+    static func releaseAllKeys() {
+        post(keyboard.releaseAll())
+    }
+
+    private static func post(_ events: [SyntheticKeyEvent]) {
+        let source = CGEventSource(stateID: .hidSystemState)
+        for key in events {
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: key.keyCode, keyDown: key.isDown) else { continue }
+            if key.isModifier { event.type = .flagsChanged }
+            event.flags = CGEventFlags(rawValue: key.flags.rawValue)
+            event.post(tap: .cghidEventTap)
         }
     }
 

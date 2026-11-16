@@ -48,6 +48,12 @@ final class AppModel {
         tap.onAction = { mapping, phase in ActionRunner.run(mapping, phase: phase) }
         tap.onCapture = { [weak self] trigger in self?.captured(trigger) }
         tap.isOverBrowser = { [browsers] in browsers.isBrowserUnderPointer() }
+        tap.onInterrupted = { ActionRunner.releaseAllKeys() }
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { ActionRunner.releaseAllKeys() }
+        }
 
         // Ask once at launch; macOS shows its own prompt.
         let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
@@ -114,6 +120,7 @@ final class AppModel {
             tap.start()
         } else if !trusted, tap.isRunning {
             tap.stop()
+            ActionRunner.releaseAllKeys()
         }
         let running = tap.isRunning
         if hasAccess != running { hasAccess = running }

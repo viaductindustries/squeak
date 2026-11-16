@@ -36,6 +36,12 @@ public struct ButtonRouter: Sendable {
         update(settings)
     }
 
+    /// Forgets presses in progress, for when Squeek may have missed events
+    /// (the tap was switched off or stopped).
+    public mutating func reset() {
+        held = [:]
+    }
+
     public mutating func update(_ settings: SqueekSettings) {
         mappings = Dictionary(settings.buttons.map { ($0.trigger, $0) }, uniquingKeysWith: { first, _ in first })
     }
@@ -52,17 +58,24 @@ public struct ButtonRouter: Sendable {
         // Left and right clicks are never touched.
         guard button >= 2 else { return .pass }
 
-        switch phase {
-        case .down:
-            let (state, result) = decide(Trigger(button: button, modifiers: modifiers), isOverBrowser: isOverBrowser)
+        let trigger = Trigger(button: button, modifiers: modifiers)
+        if phase == .down {
+            let (state, result) = decide(trigger, isOverBrowser: isOverBrowser)
             held[button] = state
             return result
-        case .dragged:
-            return result(for: held[button], finishing: false)
-        case .up:
-            defer { held[button] = nil }
-            return result(for: held[button], finishing: true)
         }
+
+        // A drag or release without a press we saw: Squeek started, or its
+        // tap was switched off, while the button was down. Treat it as the
+        // current settings would, without starting any action, so a stray
+        // release can't make a browser go back.
+        let state = held[button] ?? orphanState(trigger, isOverBrowser: isOverBrowser)
+        if phase == .up {
+            held[button] = nil
+        } else {
+            held[button] = state
+        }
+        return result(for: state, finishing: phase == .up)
     }
 
     private mutating func decide(_ trigger: Trigger, isOverBrowser: () -> Bool) -> (Held, Result) {
@@ -70,6 +83,17 @@ public struct ButtonRouter: Sendable {
             isCapturing = false
             return (.swallow, .captured(trigger))
         }
+        return decision(for: trigger, isOverBrowser: isOverBrowser)
+    }
+
+    private func orphanState(_ trigger: Trigger, isOverBrowser: () -> Bool) -> Held {
+        switch decision(for: trigger, isOverBrowser: isOverBrowser).0 {
+        case .action: .swallow
+        case let state: state
+        }
+    }
+
+    private func decision(for trigger: Trigger, isOverBrowser: () -> Bool) -> (Held, Result) {
         // An exact match wins (⌘ + middle); otherwise the plain button's
         // setting applies, so holding a key doesn't bring back behaviour the
         // user turned off.

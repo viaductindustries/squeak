@@ -131,9 +131,37 @@ struct ButtonRouterTests {
         #expect(router.route(button: 2, modifiers: [.option], phase: .down) == .pass)
     }
 
-    @Test func releaseWithoutPressPasses() {
+    @Test func releaseWithoutPressFollowsCurrentSettings() {
+        let shortcut = KeyShortcut(keyCode: 40, modifiers: [.command], keyName: "K")
+        var router = router(
+            ButtonMapping(button: 2, action: .middleClick),
+            ButtonMapping(button: 3),
+            ButtonMapping(button: 4, action: .keyboardShortcut, shortcut: shortcut),
+            ButtonMapping(button: 5, action: .normal)
+        )
+        #expect(router.route(button: 3, phase: .up) == .swallow)
+        #expect(router.route(button: 2, phase: .up) == .rewrite(button: 2))
+        #expect(router.route(button: 5, phase: .up) == .pass)
+        #expect(router.route(button: 6, phase: .up) == .pass)
+        // No action starts, so there's nothing to release either.
+        #expect(router.route(button: 4, phase: .dragged) == .swallow)
+        #expect(router.route(button: 4, phase: .up) == .swallow)
+    }
+
+    @Test func releaseWithoutPressDoesNotUseUpCapture() {
         var router = ButtonRouter()
-        #expect(router.route(button: 3, phase: .up) == .pass)
+        router.isCapturing = true
+        #expect(router.route(button: 7, phase: .up) == .pass)
+        #expect(router.isCapturing)
+    }
+
+    @Test func resetForgetsPressesInProgress() {
+        let shortcut = KeyShortcut(keyCode: 40, modifiers: [.command], keyName: "K")
+        let mapping = ButtonMapping(button: 3, action: .keyboardShortcut, shortcut: shortcut)
+        var router = router(mapping)
+        #expect(router.route(button: 3, phase: .down) == .trigger(mapping))
+        router.reset()
+        #expect(router.route(button: 3, phase: .up) == .swallow)
     }
 }
 
