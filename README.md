@@ -7,7 +7,7 @@ By default the side buttons do nothing, so browsers stop going back and forward.
 
 | Action | What it does |
 |---|---|
-| Do nothing | The press is swallowed. This is the default for Back and Forward. |
+| Do nothing | The press is swallowed. This is the default for buttons 4 and 5. |
 | Normal | The press goes through untouched. |
 | Pass to other apps | Ignored when the pointer is over a browser window; every other app sees the button as normal (for push-to-talk, game bindings and so on). |
 | Keyboard shortcut | Sends a recorded key combination, held for as long as the button is held. |
@@ -16,13 +16,14 @@ By default the side buttons do nothing, so browsers stop going back and forward.
 | Previous desktop, Next desktop | Sends ⌃← and ⌃→, so those shortcuts need to be turned on in System Settings ▸ Keyboard ▸ Keyboard Shortcuts ▸ Mission Control (they are by default). |
 | Open app | Opens or switches to an app. |
 
-A fresh install lists Back and Forward set to Do nothing. Any row can be
-removed, and a button with no row behaves as macOS normally would.
-**Add Button…** waits for you to press a button (middle, back, forward or extra
-buttons on bigger mice), recording any of ⌘ ⌥ ⌃ ⇧ you're holding, so ⌘ + Middle
-can do something different from a plain middle click. When you hold keys that
-have no row of their own, the plain button's row applies. Left and right clicks
-are never touched.
+Buttons are named as other mouse tools name them: Middle, then Button 4,
+Button 5 and so on. Browsers treat buttons 4 and 5 as back and forward, so a
+fresh install lists them set to Do nothing. Any row can be removed with **−**,
+and a button with no row behaves as macOS normally would. **+** waits for you
+to press a button, recording any of ⌘ ⌥ ⌃ ⇧ you're holding, so ⌘ + Middle can
+do something different from a plain middle click. Select a row to change it.
+When you hold keys that have no row of their own, the plain button's row
+applies. Left and right clicks are never touched.
 
 ## Building
 
@@ -40,8 +41,9 @@ The app icon is `Support/AppIcon.icon`; open it in Icon Composer (inside
 Xcode) to change it. The explored options are in
 `docs/design/explorations/app-icon/`.
 
-`swift run Squeek --snapshot <directory>` renders the settings window in a few
-states, in light and dark, without touching your settings or mouse.
+`swift run Squeek --snapshot <directory>` renders each settings tab in a few
+states, in light and dark, without touching your settings or mouse. The tab
+bar comes from the window, so it isn't in the pictures.
 
 ## How it works
 

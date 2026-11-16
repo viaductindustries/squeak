@@ -208,8 +208,8 @@ struct SqueekSettingsTests {
 
     @Test func triggerNames() {
         #expect(Trigger(button: 2).displayName == "Middle")
-        #expect(Trigger(button: 3).displayName == "Back")
-        #expect(Trigger(button: 4).displayName == "Forward")
+        #expect(Trigger(button: 3).displayName == "Button 4")
+        #expect(Trigger(button: 4).displayName == "Button 5")
         #expect(Trigger(button: 5).displayName == "Button 6")
         #expect(Trigger(button: 2, modifiers: [.command, .option]).displayName == "⌥⌘ Middle")
     }

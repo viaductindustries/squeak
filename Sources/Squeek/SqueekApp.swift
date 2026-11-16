@@ -19,17 +19,15 @@ struct SqueekApp: App {
             Image(systemName: model.menuBarSymbol)
         }
 
-        Window("Squeek", id: SettingsView.windowID) {
+        Settings {
             SettingsView(model: model)
         }
-        .windowResizability(.contentSize)
-        .defaultLaunchBehavior(.suppressed)
     }
 }
 
 struct MenuContent: View {
     @Bindable var model: AppModel
-    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         if !model.hasAccess {
@@ -39,7 +37,7 @@ struct MenuContent: View {
         Toggle("Pause", isOn: $model.isPaused)
         Divider()
         Button("Settings…") {
-            openWindow(id: SettingsView.windowID)
+            openSettings()
             bringSettingsToFront()
         }
         .keyboardShortcut(",")
@@ -53,7 +51,8 @@ struct MenuContent: View {
     private func bringSettingsToFront() {
         DispatchQueue.main.async {
             NSApp.activate()
-            let windows = NSApp.windows.filter { $0.identifier?.rawValue.contains(SettingsView.windowID) == true }
+            // SwiftUI names the settings window com_apple_SwiftUI_Settings_window.
+            let windows = NSApp.windows.filter { $0.identifier?.rawValue.contains("Settings") == true }
             for window in windows {
                 window.makeKeyAndOrderFront(nil)
                 window.orderFrontRegardless()

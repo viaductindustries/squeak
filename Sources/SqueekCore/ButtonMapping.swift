@@ -79,7 +79,8 @@ public struct KeyShortcut: Codable, Hashable, Sendable {
 
 /// A mouse button pressed while holding some modifier keys, such as ⌘ + middle.
 public struct Trigger: Hashable, Comparable, Sendable {
-    /// The macOS button number: 2 is middle, 3 is back, 4 is forward.
+    /// The macOS button number, counting from 0: 2 is middle. Browsers treat
+    /// 3 and 4 (buttons 4 and 5) as back and forward.
     public var button: Int
     public var modifiers: KeyModifiers
 
@@ -99,12 +100,9 @@ public struct Trigger: Hashable, Comparable, Sendable {
     }
 
     public static func name(forButton button: Int) -> String {
-        switch button {
-        case 2: "Middle"
-        case 3: "Back"
-        case 4: "Forward"
-        default: "Button \(button + 1)"
-        }
+        // Named the way other mouse tools name them. Only macOS's own
+        // numbering is reliable: "back" and "forward" are just a browser habit.
+        button == 2 ? "Middle" : "Button \(button + 1)"
     }
 }
 

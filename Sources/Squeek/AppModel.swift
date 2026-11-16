@@ -28,6 +28,9 @@ final class AppModel {
         didSet { tap.router.isCapturing = isCapturing }
     }
 
+    /// The button most recently added, so the list can select it.
+    private(set) var lastAdded: Trigger?
+
     private(set) var hasAccess = false
     private(set) var opensAtLogin = SMAppService.mainApp.status == .enabled
 
@@ -112,6 +115,7 @@ final class AppModel {
     private func captured(_ trigger: Trigger) {
         isCapturing = false
         settings.add(trigger)
+        lastAdded = trigger
     }
 
     private func refreshAccess() {

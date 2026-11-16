@@ -3,8 +3,9 @@ import AppKit
 import SqueekCore
 import SwiftUI
 
-/// Renders the settings window to PNGs so layout can be checked without
+/// Renders each settings tab to PNGs so layout can be checked without
 /// clicking through the app: `swift run Squeek --snapshot <directory>`.
+/// The tab bar itself comes from the window, so it isn't drawn.
 @MainActor
 enum Snapshot {
     static func runIfRequested() {
@@ -24,22 +25,28 @@ enum Snapshot {
             ButtonMapping(button: 6, action: .missionControl),
             ButtonMapping(button: 7, action: .keyboardShortcut),
         ])
-        let states: [(String, AppModel)] = [
-            ("standard", AppModel(preview: .standard, hasAccess: true)),
-            ("no-access", AppModel(preview: .standard, hasAccess: false)),
-            ("busy", AppModel(preview: busy, hasAccess: true)),
-            ("empty", AppModel(preview: SqueekSettings(buttons: []), hasAccess: true)),
-            ("many", AppModel(preview: SqueekSettings(buttons: (2...9).flatMap { button in
-                [[], [.command], [.option], [.shift, .command]].map {
-                    ButtonMapping(button: button, modifiers: $0, action: .missionControl)
-                }
-            }), hasAccess: true)),
+        let capturing = AppModel(preview: .standard, hasAccess: true)
+        capturing.isCapturing = true
+        let many = SqueekSettings(buttons: (2...9).flatMap { button in
+            [[], [.command], [.option], [.shift, .command]].map {
+                ButtonMapping(button: button, modifiers: $0, action: .missionControl)
+            }
+        })
+        let views: [(String, AnyView)] = [
+            ("buttons-standard", AnyView(ButtonsTab(model: AppModel(preview: .standard, hasAccess: true)))),
+            ("buttons-no-access", AnyView(ButtonsTab(model: AppModel(preview: .standard, hasAccess: false)))),
+            ("buttons-busy", AnyView(ButtonsTab(model: AppModel(preview: busy, hasAccess: true), selection: Trigger(button: 3)))),
+            ("buttons-app", AnyView(ButtonsTab(model: AppModel(preview: busy, hasAccess: true), selection: Trigger(button: 5)))),
+            ("buttons-capturing", AnyView(ButtonsTab(model: capturing))),
+            ("buttons-empty", AnyView(ButtonsTab(model: AppModel(preview: SqueekSettings(buttons: []), hasAccess: true)))),
+            ("buttons-many", AnyView(ButtonsTab(model: AppModel(preview: many, hasAccess: true), selection: Trigger(button: 2, modifiers: [.command])))),
+            ("general", AnyView(GeneralTab(model: AppModel(preview: .standard, hasAccess: true)))),
+            ("about", AnyView(AboutTab())),
         ]
-        for (name, model) in states {
+        for (name, view) in views {
             for appearance in [NSAppearance.Name.aqua, .darkAqua] {
                 let suffix = appearance == .aqua ? "light" : "dark"
-                render(SettingsView(model: model), appearance: appearance,
-                       to: directory.appendingPathComponent("\(name)-\(suffix).png"))
+                render(view, appearance: appearance, to: directory.appendingPathComponent("\(name)-\(suffix).png"))
             }
         }
         exit(0)
@@ -48,11 +55,12 @@ enum Snapshot {
     private static func render(_ view: some View, appearance: NSAppearance.Name, to url: URL) {
         let window = NSWindow(contentRect: .zero, styleMask: [.titled], backing: .buffered, defer: false)
         window.appearance = NSAppearance(named: appearance)
-        let host = NSHostingView(rootView: view)
+        // The window draws its own background; offscreen it has to be added.
+        let host = NSHostingView(rootView: view.background(Color(nsColor: .windowBackgroundColor)))
         window.contentView = host
         window.setContentSize(host.fittingSize)
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
-        // The form measures itself once laid out; resize to match.
+        // Some views measure themselves once laid out; resize to match.
         window.setContentSize(host.fittingSize)
         host.layoutSubtreeIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
