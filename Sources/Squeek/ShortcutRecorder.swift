@@ -7,6 +7,10 @@ struct ShortcutRecorder: View {
     @Binding var shortcut: KeyShortcut?
     @State private var isRecording = false
     @State private var monitor: Any?
+    @State private var id = UUID()
+
+    /// Only one recorder listens at a time; starting another stops this one.
+    private static var active: (id: UUID, stop: () -> Void)?
 
     var body: some View {
         Button(action: toggle) {
@@ -23,6 +27,8 @@ struct ShortcutRecorder: View {
     }
 
     private func start() {
+        Self.active?.stop()
+        Self.active = (id, stop)
         isRecording = true
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             let modifiers = KeyModifiers(event.modifierFlags)
@@ -37,6 +43,7 @@ struct ShortcutRecorder: View {
     }
 
     private func stop() {
+        if Self.active?.id == id { Self.active = nil }
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
         isRecording = false
