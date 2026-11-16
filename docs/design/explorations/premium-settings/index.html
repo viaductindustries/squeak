@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Squeek settings window options</title>
+<style>
+  :root { font: 13px -apple-system, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { margin: 0; padding: 28px 32px 60px; background: var(--desk); color: var(--text); transition: background .2s; }
+  body.light {
+    --desk: #DCE3EC; --win: #ECECEC; --bar: #E4E4E4; --group: #F6F6F6; --line: rgba(0,0,0,.08); --text: #1D1D1F; --muted: #86868B;
+    --control: #FFFFFF; --control-line: rgba(0,0,0,.12); --accent: #0A84FF; --tile-grey: #8E8E93; --sel: rgba(10,132,255,.12);
+    --mouse: #FFFFFF; --mouse-line: #C9CED6; --shadow: 0 22px 60px rgba(0,0,0,.22), 0 0 0 .5px rgba(0,0,0,.18);
+  }
+  body.dark {
+    --desk: #15171B; --win: #1E1E1E; --bar: #2A2A2A; --group: #2A2A2A; --line: rgba(255,255,255,.08); --text: #F5F5F7; --muted: #98989D;
+    --control: #3A3A3C; --control-line: rgba(255,255,255,.1); --accent: #0A84FF; --tile-grey: #636366; --sel: rgba(10,132,255,.22);
+    --mouse: #3A3A3C; --mouse-line: #5A5A5E; --shadow: 0 22px 60px rgba(0,0,0,.6), 0 0 0 .5px rgba(255,255,255,.14);
+  }
+  header.page { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  header.page h1 { font-size: 20px; font-weight: 600; margin: 0; flex: 1; }
+  .theme { display: inline-flex; background: var(--group); border-radius: 8px; padding: 2px; box-shadow: 0 0 0 .5px var(--control-line); }
+  .theme button { border: 0; background: none; color: var(--text); font: inherit; padding: 4px 12px; border-radius: 6px; cursor: pointer; }
+  .theme button.on { background: var(--control); box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 48px 40px; align-items: start; }
+  .opt > h2 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .opt > p { margin: 0 0 16px; color: var(--muted); }
+
+  /* Window chrome */
+  .win { background: var(--win); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; width: 520px; }
+  .win.wide { width: 560px; }
+  .titlebar { height: 38px; display: flex; align-items: center; padding: 0 14px; gap: 8px; position: relative; }
+  .titlebar .t { position: absolute; left: 0; right: 0; text-align: center; font-weight: 600; pointer-events: none; }
+  .lights { display: flex; gap: 8px; z-index: 1; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .lights i:nth-child(1) { background: #FF5F57; } .lights i:nth-child(2) { background: #FEBC2E; } .lights i:nth-child(3) { background: #28C840; }
+  .body { padding: 4px 20px 20px; }
+
+  /* Grouped form */
+  .sec { font-weight: 600; margin: 14px 10px 8px; }
+  .group { background: var(--group); border-radius: 10px; box-shadow: 0 0 0 .5px var(--line); }
+  .row { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; position: relative; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 12px; right: 12px; border-top: 1px solid var(--line); }
+  .row.indent + .row.indent::before { left: 52px; }
+  .row .name { flex: 1; white-space: nowrap; }
+  .row .sub { color: var(--muted); font-size: 12px; }
+  .group + .group { margin-top: 14px; }
+  .popup { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .popup::after { content: ""; width: 16px; height: 18px; border-radius: 5px; background: var(--control) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'%3E%3Cpath d='M5 7l3-3 3 3M5 11l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat; box-shadow: 0 0 0 .5px var(--control-line); }
+  .btn { background: var(--control); border-radius: 6px; padding: 3px 10px; box-shadow: 0 0 0 .5px var(--control-line), 0 1px 1px rgba(0,0,0,.06); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+  .kbd { font-variant-numeric: tabular-nums; min-width: 70px; justify-content: center; }
+  .minus { width: 16px; height: 16px; border-radius: 50%; border: 1.3px solid var(--muted); position: relative; flex: none; opacity: .8; }
+  .minus::after { content: ""; position: absolute; left: 3.5px; right: 3.5px; top: 6.6px; border-top: 1.3px solid var(--muted); }
+  .switch { width: 32px; height: 18px; border-radius: 9px; background: var(--control-line); position: relative; flex: none; }
+  .switch::after { content: ""; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .switch.on { background: #34C759; } .switch.on::after { left: 16px; }
+  .link { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .muted { color: var(--muted); }
+  .appicon { width: 16px; height: 16px; border-radius: 4px; background: linear-gradient(#8E8E93, #636366); display: inline-block; }
+
+  /* Mouse button glyph */
+  .glyph { width: 28px; height: 28px; flex: none; }
+  .tile { width: 28px; height: 28px; border-radius: 7px; flex: none; display: grid; place-items: center; }
+  .tile svg { width: 17px; height: 17px; }
+
+  /* A: header */
+  .hero { display: flex; align-items: center; gap: 14px; padding: 6px 10px 6px; }
+  .hero svg.icon { width: 56px; height: 56px; }
+  .hero .n { font-size: 17px; font-weight: 600; }
+  .hero .v { color: var(--muted); }
+  .hero .grow { flex: 1; }
+  .foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px 0; color: var(--muted); font-size: 12px; }
+
+  /* B: toolbar tabs */
+  .toolbar { display: flex; justify-content: center; gap: 4px; padding: 0 0 8px; background: var(--bar); border-bottom: 1px solid var(--line); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 12px 4px; border-radius: 7px; color: var(--muted); font-size: 11px; }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.on { background: var(--sel); color: var(--accent); }
+  .barwrap { background: var(--bar); }
+  .about { text-align: center; padding: 26px 20px 26px; }
+  .about svg.icon { width: 96px; height: 96px; }
+  .about .n { font-size: 20px; font-weight: 600; margin-top: 8px; }
+  .about .v { color: var(--muted); margin: 2px 0 14px; }
+  .about .small { color: var(--muted); font-size: 11px; margin-top: 16px; }
+  .panes { display: grid; grid-template-columns: 1fr; gap: 18px; }
+  .pane-label { font-size: 11px; color: var(--muted); margin: 0 0 6px 4px; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* C: diagram */
+  .split { display: grid; grid-template-columns: 170px 1fr; gap: 16px; padding: 6px 20px 20px; align-items: start; }
+  .mouse { background: var(--group); border-radius: 12px; box-shadow: 0 0 0 .5px var(--line); padding: 18px 0 12px; text-align: center; }
+  .mouse svg { width: 120px; }
+  .mouse .cap { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  .row.sel { background: var(--sel); border-radius: 7px; }
+  .row.sel::before, .row.sel + .row::before { display: none; }
+  .badge { font-size: 11px; font-weight: 600; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--control-line); color: var(--text); flex: none; }
+  .row.sel .badge { background: var(--accent); color: #fff; }
+
+  /* D: tiles */
+  .chev { width: 7px; height: 12px; flex: none; opacity: .5; }
+  .row.tall { min-height: 50px; }
+  .row .two { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+  .detail { color: var(--muted); }
+  .sheet { margin: 18px auto 0; width: 380px; background: var(--win); border-radius: 14px; box-shadow: var(--shadow); padding: 18px 18px 16px; }
+  .sheet h3 { margin: 0 0 12px; font-size: 13px; text-align: center; }
+  .sheet .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: none; }
+</style></head>
+<body class="light">
+<header class="page">
+  <h1>Squeek settings window</h1>
+  <div class="theme"><button class="on" data-t="light">Light</button><button data-t="dark">Dark</button></div>
+</header>
+<div class="grid" id="grid"></div>
+
+<script>
+const ICON = `<svg class="icon" viewBox="100 100 824 824"><defs><linearGradient id="ib" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A7D5FB"/><stop offset="1" stop-color="#5184E1"/></linearGradient><linearGradient id="ibody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF"/><stop offset="1" stop-color="#DCE3EC"/></linearGradient></defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#ib)"/>
+  <g transform="translate(512 472) scale(1.05) translate(-512 -540)">
+  <path d="M512 760 C512 806 548 820 584 808 C622 795 640 772 678 780" fill="none" stroke="#F4F7FB" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="392" cy="352" r="86" fill="#E3E9F1"/><circle cx="392" cy="352" r="52" fill="#FFA3BA"/>
+  <circle cx="632" cy="352" r="86" fill="#E3E9F1"/><circle cx="632" cy="352" r="52" fill="#FFA3BA"/>
+  <rect x="362" y="320" width="300" height="450" rx="150" fill="url(#ibody)"/>
+  <path d="M512 322 V470" stroke="#B8C3D1" stroke-width="10" stroke-linecap="round"/>
+  <rect x="497" y="380" width="30" height="62" rx="15" fill="#B8C3D1"/></g></svg>`;
+
+const ROWS = [
+  { t: "Middle", b: "middle", a: "Normal", tile: ["#8E8E93", "pointer"] },
+  { t: "⌘ Middle", b: "middle", a: "Mission Control", tile: ["#5E5CE6", "grid"] },
+  { t: "⌥⇧ Middle", b: "middle", a: "Show desktop", tile: ["#30B0C7", "desktop"] },
+  { t: "Back", b: "back", a: "Keyboard shortcut", extra: `<span class="btn kbd">⌘[</span>`, detail: "⌘[", tile: ["#FF9F0A", "keyboard"] },
+  { t: "Forward", b: "forward", a: "Pass to other apps", tile: ["#34C759", "pass"] },
+  { t: "Button 6", b: "other", a: "Open app", extra: `<span class="btn"><i class="appicon"></i>System Settings</span>`, detail: "System Settings", tile: ["#0A84FF", "app"] },
+];
+
+// A tiny top-down mouse with the relevant button filled in.
+function glyph(which) {
+  const on = "var(--accent)", off = "none";
+  return `<svg class="glyph" viewBox="0 0 28 28"><rect x="7.5" y="3.5" width="13" height="21" rx="6.5" fill="none" stroke="var(--muted)" stroke-width="1.3"/>
+    <rect x="12.6" y="6.5" width="2.8" height="5" rx="1.4" fill="${which === "middle" ? on : "var(--muted)"}" />
+    ${which === "back" ? `<rect x="5" y="12" width="3" height="4.5" rx="1.2" fill="${on}"/>` : ""}
+    ${which === "forward" ? `<rect x="5" y="7.5" width="3" height="4.5" rx="1.2" fill="${on}"/>` : ""}
+    ${which === "other" ? `<rect x="20" y="9" width="3" height="5" rx="1.2" fill="${on}"/>` : ""}
+  </svg>`;
+}
+
+const SYM = {
+  pointer: `<path d="M5 3l9 5-4 1.2L8 13z" fill="#fff"/>`,
+  grid: `<rect x="2" y="3" width="6" height="5" rx="1" fill="#fff"/><rect x="10" y="3" width="6" height="5" rx="1" fill="#fff"/><rect x="2" y="10" width="6" height="5" rx="1" fill="#fff"/><rect x="10" y="10" width="6" height="5" rx="1" fill="#fff"/>`,
+  desktop: `<rect x="2" y="3" width="14" height="10" rx="1.5" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M6 16h6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>`,
+  keyboard: `<rect x="1.5" y="4.5" width="15" height="9" rx="2" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M4.5 7.5h1M8.5 7.5h1M12.5 7.5h1M5.5 10.5h7" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>`,
+  pass: `<path d="M3 9h10M10 5l4 4-4 4" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  app: `<rect x="3" y="3" width="5" height="5" rx="1.3" fill="#fff"/><rect x="10" y="3" width="5" height="5" rx="1.3" fill="#fff"/><rect x="3" y="10" width="5" height="5" rx="1.3" fill="#fff"/><rect x="10" y="10" width="5" height="5" rx="1.3" fill="#fff" opacity=".6"/>`,
+};
+const tile = ([c, s]) => `<span class="tile" style="background:${c}"><svg viewBox="0 0 18 18">${SYM[s]}</svg></span>`;
+const chev = `<svg class="chev" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const lights = `<div class="lights"><i></i><i></i><i></i></div>`;
+
+const formRows = (lead) => ROWS.map(r => `<div class="row ${lead ? "indent" : ""}">${lead ? lead(r) : ""}<span class="name">${r.t}</span>${r.extra || ""}<span class="popup">${r.a}</span><span class="minus"></span></div>`).join("");
+const addRow = `<div class="row"><span class="btn">Add Button…</span></div>`;
+const loginGroup = `<div class="group"><div class="row"><span class="name">Open at login</span><span class="switch on"></span></div></div>`;
+
+const TABICON = {
+  buttons: `<svg viewBox="0 0 22 22"><rect x="6" y="2" width="10" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 3v5" stroke="currentColor" stroke-width="1.6"/></svg>`,
+  general: `<svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 2v3M11 17v3M2 11h3M17 11h3M4.6 4.6l2.1 2.1M15.3 15.3l2.1 2.1M4.6 17.4l2.1-2.1M15.3 6.7l2.1-2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  about: `<svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 10v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="11" cy="7" r="1.1" fill="currentColor"/></svg>`,
+};
+const toolbar = (on) => `<div class="barwrap"><div class="titlebar">${lights}<span class="t">${on[0].toUpperCase() + on.slice(1)}</span></div>
+  <div class="toolbar">${["buttons", "general", "about"].map(k => `<div class="tab ${k === on ? "on" : ""}">${TABICON[k]}${k[0].toUpperCase() + k.slice(1)}</div>`).join("")}</div></div>`;
+
+const MOUSE = `<svg viewBox="0 0 120 190">
+  <rect x="14" y="6" width="92" height="176" rx="46" fill="var(--mouse)" stroke="var(--mouse-line)" stroke-width="1.5"/>
+  <path d="M60 7v62M15 69h90" stroke="var(--mouse-line)" stroke-width="1.5"/>
+  <rect x="53" y="22" width="14" height="30" rx="7" fill="var(--accent)"/>
+  <rect x="8" y="78" width="9" height="20" rx="4" fill="var(--mouse-line)"/>
+  <rect x="8" y="102" width="9" height="20" rx="4" fill="var(--mouse-line)"/>
+  <rect x="103" y="86" width="9" height="20" rx="4" fill="var(--mouse-line)"/>
+</svg>`;
+
+const OPTIONS = [
+  { k: "A", name: "Header and footer", caption: "The same form, with the icon, name and pause switch on top and the link and version below. Each button gets a small drawing of which button it is.",
+    html: `<div class="win"><div class="titlebar">${lights}</div><div class="body">
+      <div class="hero">${ICON}<div class="grow"><div class="n">Squeek</div><div class="v">Version 1.0</div></div><span class="muted">On</span><span class="switch on"></span></div>
+      <div class="sec">Buttons</div><div class="group">${formRows(r => glyph(r.b))}${addRow}</div>
+      ${loginGroup}
+      <div class="foot"><span>Made by Viaduct</span><a class="link">viaduct.io/squeek</a></div>
+    </div></div>` },
+
+  { k: "B", name: "Tabs", caption: "A classic Mac preferences window with Buttons, General and About tabs. About carries the icon, version and link.",
+    html: `<div class="panes">
+      <div class="win">${toolbar("buttons")}<div class="body"><div class="sec">Buttons</div><div class="group">${formRows()}${addRow}</div></div></div>
+      <div class="win">${toolbar("about")}<div class="about">${ICON}<div class="n">Squeek</div><div class="v">Version 1.0</div><a class="link">viaduct.io/squeek</a><div class="small">© 2026 Viaduct</div></div></div>
+    </div>` },
+
+  { k: "C", name: "Mouse diagram", caption: "A drawing of the mouse beside the list. Selecting a row lights up its button, so it's clear which is which.",
+    html: `<div class="win wide"><div class="titlebar">${lights}<span class="t">Squeek</span></div>
+      <div class="split"><div class="mouse">${MOUSE}<div class="cap">Middle</div></div>
+      <div><div class="group">${ROWS.map((r, i) => `<div class="row ${i === 0 ? "sel" : ""}"><span class="name">${r.t}</span>${r.extra || ""}<span class="popup">${r.a}</span><span class="minus"></span></div>`).join("")}${addRow}</div>
+      ${loginGroup}
+      <div class="foot" style="padding-top:12px"><span>Squeek 1.0</span><a class="link">viaduct.io/squeek</a></div></div></div>
+    </div>` },
+
+  { k: "D", name: "System Settings rows", caption: "Each button is a row with a coloured icon for its action and what it does underneath. Clicking a row opens a small sheet to change it.",
+    html: `<div class="win"><div class="titlebar">${lights}</div><div class="body">
+      <div class="hero" style="padding-bottom:4px">${ICON.replace('class="icon"', 'class="icon" style="width:44px;height:44px"')}<div class="grow"><div class="n">Squeek</div><a class="link">viaduct.io/squeek</a></div></div>
+      <div class="sec">Buttons</div>
+      <div class="group">${ROWS.map(r => `<div class="row tall indent">${tile(r.tile)}<span class="two"><span>${r.t}</span><span class="sub">${r.a}${r.detail ? ` – ${r.detail}` : ""}</span></span>${chev}</div>`).join("")}${addRow}</div>
+      ${loginGroup}
+    </div></div>
+    <div class="sheet"><h3>Back</h3><div class="group">
+      <div class="row"><span class="name">Action</span><span class="popup">Keyboard shortcut</span></div>
+      <div class="row"><span class="name">Shortcut</span><span class="btn kbd">⌘[</span></div></div>
+      <div class="actions"><span class="btn" style="color:#FF3B30">Remove</span><span style="flex:1"></span><span class="btn primary">Done</span></div></div>` },
+];
+
+document.getElementById("grid").innerHTML = OPTIONS.map(o => `<section class="opt"><h2>${o.k}. ${o.name}</h2><p>${o.caption}</p>${o.html}</section>`).join("");
+document.querySelectorAll(".theme button").forEach(b => b.onclick = () => {
+  document.body.className = b.dataset.t;
+  document.querySelectorAll(".theme button").forEach(x => x.classList.toggle("on", x === b));
+});
+</script>
+</body></html>
