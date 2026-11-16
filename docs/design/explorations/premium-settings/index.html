@@ -100,6 +100,30 @@
   .sheet h3 { margin: 0 0 12px; font-size: 13px; text-align: center; }
   .sheet .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
   .btn.primary { background: var(--accent); color: #fff; box-shadow: none; }
+
+  /* Round 2: Buttons tab */
+  h1.part { font-size: 18px; font-weight: 600; margin: 56px 0 6px; }
+  p.part { margin: 0 0 24px; color: var(--muted); }
+  .keycap { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 5px; background: var(--control); box-shadow: 0 0 0 .5px var(--control-line), 0 1px 0 var(--control-line); font-size: 10.5px; font-weight: 500; line-height: 1; }
+  .trig { flex: 1; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .trig .plus { color: var(--muted); font-size: 11px; margin: 0 1px; }
+  .trig .bname { margin-left: 4px; }
+  .row.hover { background: var(--line); border-radius: 7px; }
+  .row.hover::before, .row.hover + .row::before { display: none; }
+  .ghost { visibility: hidden; }
+  .table { background: var(--group); border-radius: 8px; box-shadow: 0 0 0 .5px var(--control-line); overflow: hidden; }
+  .thead { display: flex; padding: 5px 12px; font-size: 11px; color: var(--muted); border-bottom: 1px solid var(--line); }
+  .thead span:first-child { width: 150px; }
+  .trow { display: flex; align-items: center; min-height: 34px; padding: 0 12px; gap: 10px; }
+  .trow:nth-child(odd) { background: color-mix(in srgb, var(--line) 50%, transparent); }
+  .trow .c1 { width: 140px; flex: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .trow .c2 { flex: 1; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .trow.sel { background: var(--accent); color: #fff; }
+  .trow.sel .muted { color: rgba(255,255,255,.8); }
+  .pm { display: flex; border-top: 1px solid var(--line); background: var(--group); }
+  .pm span { width: 26px; height: 22px; display: grid; place-items: center; border-right: 1px solid var(--line); font-size: 15px; color: var(--text); }
+  .tabbody { padding: 18px 20px 20px; }
+  .split2 { display: grid; grid-template-columns: 130px 1fr; gap: 14px; align-items: start; }
 </style></head>
 <body class="light">
 <header class="page">
@@ -107,6 +131,9 @@
   <div class="theme"><button class="on" data-t="light">Light</button><button data-t="dark">Dark</button></div>
 </header>
 <div class="grid" id="grid"></div>
+<h1 class="part">Round 2: B, with a nicer button list</h1>
+<p class="part">Copyright updated on the About tab.</p>
+<div class="grid" id="grid2"></div>
 
 <script>
 const ICON = `<svg class="icon" viewBox="100 100 824 824"><defs><linearGradient id="ib" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A7D5FB"/><stop offset="1" stop-color="#5184E1"/></linearGradient><linearGradient id="ibody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF"/><stop offset="1" stop-color="#DCE3EC"/></linearGradient></defs>
@@ -184,7 +211,7 @@ const OPTIONS = [
   { k: "B", name: "Tabs", caption: "A classic Mac preferences window with Buttons, General and About tabs. About carries the icon, version and link.",
     html: `<div class="panes">
       <div class="win">${toolbar("buttons")}<div class="body"><div class="sec">Buttons</div><div class="group">${formRows()}${addRow}</div></div></div>
-      <div class="win">${toolbar("about")}<div class="about">${ICON}<div class="n">Squeek</div><div class="v">Version 1.0</div><a class="link">viaduct.io/squeek</a><div class="small">© 2026 Viaduct</div></div></div>
+      <div class="win">${toolbar("about")}<div class="about">${ICON}<div class="n">Squeek</div><div class="v">Version 1.0</div><a class="link">viaduct.io/squeek</a><div class="small">© 2026 Viaduct Industries Limited</div></div></div>
     </div>` },
 
   { k: "C", name: "Mouse diagram", caption: "A drawing of the mouse beside the list. Selecting a row lights up its button, so it's clear which is which.",
@@ -209,6 +236,29 @@ const OPTIONS = [
 ];
 
 document.getElementById("grid").innerHTML = OPTIONS.map(o => `<section class="opt"><h2>${o.k}. ${o.name}</h2><p>${o.caption}</p>${o.html}</section>`).join("");
+
+// Round 2
+const caps = (t) => {
+  const m = t.match(/^([⌃⌥⇧⌘]+)\s*(.*)$/);
+  if (!m) return `<span class="bname" style="margin:0">${t}</span>`;
+  return [...m[1]].map(c => `<span class="keycap">${c}</span>`).join("") + `<span class="plus">+</span><span class="bname" style="margin:0">${m[2]}</span>`;
+};
+const tabWin = (inner, on = "buttons") => `<div class="win">${toolbar(on)}<div class="tabbody">${inner}</div></div>`;
+const R2 = [
+  { k: "B1", name: "Action icons", caption: "D's rows inside the tab: a coloured icon for each action and the setting underneath. Clicking a row opens a sheet to change it.",
+    html: tabWin(`<div class="group">${ROWS.map(r => `<div class="row tall indent">${tile(r.tile)}<span class="two"><span class="trig">${caps(r.t)}</span><span class="sub">${r.a}${r.detail ? ` – ${r.detail}` : ""}</span></span>${chev}</div>`).join("")}${addRow}</div>`) },
+  { k: "B2", name: "Keycaps", caption: "Edited in place as now, but each row shows which button with a small drawing and the held keys as keycaps. Remove only appears on the row under the pointer.",
+    html: tabWin(`<div class="group">${ROWS.map((r, i) => `<div class="row indent ${i === 3 ? "hover" : ""}">${glyph(r.b)}<span class="trig">${caps(r.t)}</span>${r.extra || ""}<span class="popup">${r.a}</span><span class="minus ${i === 3 ? "" : "ghost"}"></span></div>`).join("")}${addRow}</div>`) },
+  { k: "B3", name: "Table with + and −", caption: "A native Mac list, like Login Items. Rows show their setting as text; the selected row gets the controls. Add and remove sit under the list.",
+    html: tabWin(`<div class="table"><div class="thead"><span>Button</span><span>Action</span></div>${ROWS.map((r, i) => i === 3
+      ? `<div class="trow" style="background:var(--sel)"><span class="c1">${caps(r.t)}</span><span class="c2"><span class="popup">${r.a}</span>${r.extra}</span></div>`
+      : `<div class="trow"><span class="c1">${caps(r.t)}</span><span class="c2"><span>${r.a}</span><span class="muted">${r.detail || ""}</span></span></div>`).join("")}<div class="pm"><span>+</span><span>−</span></div></div>`) },
+  { k: "B4", name: "Mouse beside the list", caption: "C inside the tab: the drawing lights up the button for the row you're on, and rows show the action as text until selected.",
+    html: tabWin(`<div class="split2"><div class="mouse" style="padding:14px 0 10px">${MOUSE.replace('<svg ', '<svg style="width:88px" ')}<div class="cap">Middle</div></div>
+      <div class="group">${ROWS.map((r, i) => `<div class="row ${i === 0 ? "sel" : ""}"><span class="trig">${caps(r.t)}</span>${i === 0 ? `<span class="popup">${r.a}</span>` : `<span class="muted">${r.a}</span>`}</div>`).join("")}${addRow}</div></div>`) },
+];
+document.getElementById("grid2").innerHTML = R2.map(o => `<section class="opt"><h2>${o.k}. ${o.name}</h2><p>${o.caption}</p>${o.html}</section>`).join("");
+
 document.querySelectorAll(".theme button").forEach(b => b.onclick = () => {
   document.body.className = b.dataset.t;
   document.querySelectorAll(".theme button").forEach(x => x.classList.toggle("on", x === b));
